@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from robofleet_nexus.gpu.inventory import GpuInventory, detect_nvidia_gpus
 from robofleet_nexus.isaac.job_spec import IsaacSimulationJob, SimulationPlan
 from robofleet_nexus.isaac.scheduler import plan_simulation_job
+from robofleet_nexus.isaac.profiles import SimulationProfile, list_simulation_profiles
 
 from robofleet_nexus.audit.hash_chain import HashChainAuditLog
 from robofleet_nexus.diagnostics.rules import evaluate_event
@@ -84,3 +85,15 @@ def plan_simulation(job: IsaacSimulationJob) -> SimulationPlan:
     )
 
     return plan
+
+@app.get("/simulations/profiles", response_model=list[SimulationProfile])
+def simulation_profiles() -> list[SimulationProfile]:
+    profiles = list_simulation_profiles()
+
+    AUDIT_LOG.append(
+        event_type="simulation.profiles.listed",
+        actor="api",
+        payload={"profile_count": len(profiles)},
+    )
+
+    return profiles
