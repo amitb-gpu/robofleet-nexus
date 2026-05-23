@@ -96,3 +96,10 @@ flowchart TB
     Core --> Policy[Policy Engine]
     Core --> Audit[Tamper-Evident Audit Log]
     Core --> API[REST API / CLI / Dashboard]
+
+## CLI simulation planning examples
+
+Plan a CI-safe mock simulation job:
+
+```bash
+robofleet simulations plan examples/simulations/isaac_warehouse_nav.yaml
