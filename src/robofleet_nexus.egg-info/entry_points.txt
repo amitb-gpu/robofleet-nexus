@@ -1,0 +1,2 @@
+[console_scripts]
+robofleet = robofleet_nexus.cli.main:app
