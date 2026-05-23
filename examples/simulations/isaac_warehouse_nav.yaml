@@ -1,0 +1,23 @@
+job_id: sim-warehouse-nav-001
+backend: mock
+
+resources:
+  gpu_count: 1
+  min_vram_gb: 8
+  timeout_minutes: 30
+
+parameters:
+  scenario: warehouse_navigation
+  robot_model: nova_carter
+  num_runs: 5
+  random_seed_start: 1000
+  domain_randomization: true
+  collect_synthetic_data: false
+
+safety:
+  allow_physical_robot_commands: false
+  human_approval_required: false
+
+metadata:
+  purpose: cli_yaml_planning_demo
+  nvidia_alignment: isaac_sim_orchestration

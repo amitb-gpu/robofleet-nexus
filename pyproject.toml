@@ -14,7 +14,8 @@ dependencies = [
   "pydantic-settings",
   "typer",
   "rich",
-  "httpx"
+  "httpx",
+  "PyYAML"
 ]
 
 [project.optional-dependencies]
@@ -22,7 +23,8 @@ dev = [
   "pytest",
   "pytest-cov",
   "ruff",
-  "mypy"
+  "mypy",
+  "types-PyYAML"
 ]
 
 [project.scripts]
