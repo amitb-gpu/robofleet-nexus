@@ -1,0 +1,25 @@
+job_id: sim-heavy-l40s-001
+backend: isaac_sim
+
+resources:
+  gpu_count: 1
+  min_vram_gb: 32
+  timeout_minutes: 90
+
+parameters:
+  scenario: warehouse_navigation_high_fidelity
+  robot_model: nova_carter
+  num_runs: 25
+  random_seed_start: 5000
+  domain_randomization: true
+  collect_synthetic_data: true
+
+safety:
+  allow_physical_robot_commands: false
+  human_approval_required: false
+
+metadata:
+  purpose: l40s_capacity_planning_demo
+  expected_laptop_behavior: blocked_due_to_insufficient_vram
+  expected_l40s_behavior: accepted_for_dry_run_planning
+  nvidia_alignment: isaac_sim_gpu_capacity_orchestration
