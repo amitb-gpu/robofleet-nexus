@@ -383,7 +383,7 @@ robofleet simulations plan examples/simulations/isaac_heavy_l40s.yaml --fail-on-
 
 On a 6 GB RTX A1000 laptop GPU, the planner returns `accepted: false` with an insufficient VRAM reason.
 
-> Add `docs/assets/cli_gpu_blocked.png` after capturing the terminal output.
+![GPU workload blocked on RTX A1000](docs/assets/cli_gpu_blocked.png)
 
 ---
 
