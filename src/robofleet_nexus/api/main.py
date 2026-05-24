@@ -24,6 +24,11 @@ AUDIT_LOG = HashChainAuditLog()
 EVENTS: list[RobotEvent] = []
 FINDINGS: list[DiagnosticFinding] = []
 RCA_RESULTS: list[dict] = []
+# Cooldown tracker: robot_id → set of finding titles already RCA'd this session
+# Prevents re-firing RCA on every repeated telemetry event for the same condition
+_RCA_SEEN: dict[str, set[str]] = {}
+_RCA_COOLDOWN_SECONDS = 300  # only re-run RCA for same finding after 5 minutes
+_RCA_LAST_FIRED: dict[str, float] = {}
 
 
 async def _run_and_broadcast_rca(robot_id: str, findings: list[DiagnosticFinding]) -> None:
@@ -61,7 +66,18 @@ async def ingest_telemetry(
     await on_telemetry_ingested(event.robot_id, event.model_dump(mode="json"))
 
     if findings:
-        background_tasks.add_task(_run_and_broadcast_rca, event.robot_id, findings)
+        import time
+        robot_id = event.robot_id
+        now = time.time()
+        last = _RCA_LAST_FIRED.get(robot_id, 0)
+        new_titles = {f.title for f in findings}
+        seen = _RCA_SEEN.get(robot_id, set())
+        truly_new = new_titles - seen
+        cooldown_expired = (now - last) > _RCA_COOLDOWN_SECONDS
+        if truly_new or cooldown_expired:
+            _RCA_SEEN[robot_id] = seen | new_titles
+            _RCA_LAST_FIRED[robot_id] = now
+            background_tasks.add_task(_run_and_broadcast_rca, event.robot_id, findings)
 
     return findings
 

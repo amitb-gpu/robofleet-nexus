@@ -15,7 +15,9 @@ dependencies = [
   "typer",
   "rich",
   "httpx",
-  "PyYAML"
+  "PyYAML",
+  "anthropic",
+  "websockets"
 ]
 
 [project.optional-dependencies]
