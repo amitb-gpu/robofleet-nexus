@@ -11,11 +11,7 @@
 
 RoboFleet Nexus is a production-style robotics control plane that sits above robot middleware, simulation infrastructure, GPU resources, and AI diagnostic workflows. It does **not** replace ROS2, Isaac Sim, Isaac Lab, or robot-control systems. Instead, it connects them into a unified orchestration and observability layer.
 
-It is designed for teams that need to answer:
-
 > What is happening across my robot fleet, simulation jobs, telemetry streams, GPU resources, diagnostic findings, and safety-governed AI workflows — and what should happen next?
-
-The project is built Python-first with FastAPI, Pydantic, ROS2 integration paths, NVIDIA GPU discovery, simulation job planning, CLI workflows, WebSocket-oriented observability, diagnostic rules, AI-assisted root-cause analysis, and tamper-evident audit logging.
 
 ---
 
@@ -27,34 +23,37 @@ RoboFleet Nexus is organized as a layered control plane:
 
 - **Dashboard / WebSocket layer** for live fleet visibility
 - **FastAPI control plane** for telemetry, diagnostics, audit, GPU inventory, and simulation planning
-- **ROS2 ingestion layer** for robot telemetry and mock development mode
-- **NVIDIA GPU layer** for local and remote GPU inventory
+- **ROS2 ingestion layer** for real robot telemetry via rclpy and mock development mode
+- **NVIDIA GPU layer** for local and remote GPU inventory with simulation capability profiling
 - **Isaac simulation planning layer** for GPU-aware workload admission
-- **AI RCA layer** for structured root-cause analysis
-- **Audit layer** for tamper-evident event history
-- **Future production layer** for Prometheus, Kubernetes GPU scheduling, and advanced fleet optimization
+- **AI RCA layer** for Claude-powered structured root-cause analysis
+- **Audit layer** for tamper-evident SHA-256 hash-chain event history
+
+---
+
+## Screenshots
+
+### Live fleet dashboard
+
+![RoboFleet Nexus dashboard](docs/assets/dashboard_overview.png)
+
+Real-time WebSocket dashboard showing GPU inventory, robot fleet table, live event stream, diagnostic findings, and AI RCA results. No page refresh required. Served at `http://localhost:8000/dashboard` with zero frontend build tooling.
+
+### GPU-aware Isaac workload blocking
+
+A heavy Isaac Sim job is rejected before launch when the local GPU does not meet the requested VRAM threshold.
+
+![GPU workload blocked on RTX A1000](docs/assets/cli_gpu_blocked.png)
+
+On a 6 GB RTX A1000 laptop GPU, the planner returns `accepted: false` with an insufficient VRAM reason.
 
 ---
 
 ## Why this project exists
 
-Modern robotics stacks are powerful but fragmented.
-
-A robotics team may use:
-
-- ROS2 for robot communication
-- Isaac Sim for simulation
-- Isaac Lab for robot learning
-- NVIDIA GPUs for simulation and synthetic-data workloads
-- custom scripts for telemetry
-- separate dashboards for observability
-- manual workflows for debugging and root-cause analysis
+Modern robotics stacks are powerful but fragmented. A robotics team may use ROS2 for robot communication, Isaac Sim for simulation, Isaac Lab for robot learning, NVIDIA GPUs for simulation and synthetic-data workloads, custom scripts for telemetry, and separate dashboards for observability.
 
 RoboFleet Nexus provides a unified control-plane layer across those systems.
-
-It is designed to answer:
-
-> What is happening across my robot fleet, simulation jobs, telemetry streams, GPU resources, diagnostic findings, and safety-governed AI workflows — and what should happen next?
 
 ---
 
@@ -62,21 +61,19 @@ It is designed to answer:
 
 RoboFleet Nexus is:
 
-- a robotics fleet observability layer
-- a ROS2 telemetry ingestion and diagnostic pipeline
+- a live robotics fleet observability platform with real-time WebSocket dashboard
+- a ROS2 Jazzy telemetry ingestion and diagnostic pipeline (rclpy bridge)
 - a GPU-aware NVIDIA Isaac simulation planner
+- an AI-powered root-cause analysis engine (Claude API)
 - a CLI-driven simulation job planning tool
 - a FastAPI service for telemetry, diagnostics, GPU inventory, audit, and simulation planning
-- an AI-assisted RCA workflow layer
-- a tamper-evident decision and event audit trail
-- a foundation for future Kubernetes GPU scheduling and Isaac Lab experiment orchestration
+- a tamper-evident SHA-256 hash-chain decision and event audit trail
+- a foundation for Kubernetes GPU scheduling, digital twins, and fleet autonomy
 
 RoboFleet Nexus is **not**:
 
 - a physics simulator
-- a replacement for Isaac Sim
-- a replacement for Isaac Lab
-- a replacement for ROS2
+- a replacement for Isaac Sim, Isaac Lab, or ROS2
 - a direct physical robot controller
 - an autonomous robot-command agent
 
@@ -86,56 +83,44 @@ The platform may plan, validate, recommend, and audit. Physical robot command pa
 
 ## Core capabilities
 
-Current and implemented capabilities include:
+### Implemented and verified (v0.1.0)
 
-- FastAPI control-plane service
-- typed Pydantic telemetry, diagnostic, GPU, and simulation-job schemas
-- robot telemetry ingestion
-- deterministic diagnostic rules engine
-- structured diagnostic findings with evidence and recommended actions
-- tamper-evident SHA-256 hash-chain audit log
-- NVIDIA GPU inventory through `nvidia-smi`
-- GPU-capacity-aware Isaac Sim / Isaac Lab job planning
-- simulation environment profiles for CI, laptop, workstation, and production GPU nodes
-- YAML and JSON simulation job loading
-- CLI simulation planning workflow
-- CI-safe mock simulation backend
-- heavy Isaac Sim capacity-planning example
-- GitHub Actions CI
-- Ruff linting
-- strict mypy type checking
-- pytest coverage for core workflows
+- **Live WebSocket dashboard** — real-time fleet visibility at `/dashboard`, zero build step, 50-event replay buffer for new clients
+- **ROS2 Jazzy bridge** — rclpy subscriber for `/battery_state`, `/diagnostics`, `/joint_states`, `/odom`; runs on system Python 3.12 decoupled from conda environment
+- **Mock bridge** — synthetic telemetry publisher for dev and CI without physical hardware
+- **GPU monitoring** — `nvidia-smi` background poll every 3 seconds; auto-classifies devices into `LAPTOP_DEV` / `WORKSTATION_DEV` / `WORKSTATION_HIGH` / `PRODUCTION` profiles
+- **Remote GPU agent** — pushes GPU metrics from any node (RTX 5080, Jetson) to the central Nexus instance over HTTP
+- **AI RCA engine** — Claude API (claude-sonnet-4-6) analyses diagnostic findings against recent telemetry context; returns ranked root causes, confidence levels, risk rating, and prioritised remediation steps
+- **Diagnostic rules engine** — battery low/critical, motor/GPU temperature, packet loss, joint effort thresholds
+- **Tamper-evident audit log** — SHA-256 hash-chain for all ingestion, findings, simulation plans, and GPU checks
+- **Isaac Sim job planner** — GPU-capacity-aware workload admission with simulation environment profiles
+- **FastAPI control plane** — typed Pydantic schemas, async endpoints, BackgroundTasks for non-blocking RCA
+- **CLI simulation planning** — YAML and JSON job loading, `--fail-on-blocked` flag
 
-Additional platform capabilities documented in the project overview include:
+### Planned (Phase 2–3)
 
-- ROS2 Jazzy bridge architecture
-- live WebSocket dashboard direction
-- GPU fleet monitoring
-- AI-powered root-cause analysis
-- multi-machine GPU agent direction
-- future Kubernetes GPU scheduling path
+- Prometheus / Grafana metrics export
+- JWT auth and multi-tenant organisation scoping
+- Policy-as-code engine (YAML geofencing, battery thresholds, GPU limits)
+- Isaac Lab experiment tracking and ML pipeline
+- Kubernetes operator with `SimulationJob` and `RobotFleet` CRDs
+- Digital twin state layer (live per-robot state mirror)
+- Quantum-optimised multi-robot routing (QUBO + QAOA via Cirq + TFQ + cuQuantum)
+- Plugin marketplace for diagnostic rules and sensor adapters
 
 ---
 
 ## NVIDIA robotics orchestration layer
 
-RoboFleet Nexus treats NVIDIA robotics infrastructure as orchestration targets rather than systems to reimplement.
-
-The platform is designed to sit above:
-
-- NVIDIA Isaac Sim for simulation workflows
-- Isaac Lab for robot learning and experiment management
-- Isaac ROS / ROS2 bridge workflows
-- NVIDIA GPUs for simulation, synthetic data, and acceleration workloads
-- future Kubernetes GPU nodes using NVIDIA GPU Operator / device-plugin patterns
+RoboFleet Nexus treats NVIDIA robotics infrastructure as orchestration targets rather than systems to reimplement. The platform sits above Isaac Sim, Isaac Lab, Isaac ROS / ROS2 bridge workflows, and NVIDIA GPUs for simulation and acceleration workloads.
 
 The current scheduler does not launch physical robot commands. It creates a structured simulation plan, checks GPU capacity, applies safety policy, and returns an auditable decision.
 
 Example behavior:
 
-- a lightweight mock simulation job can run in CI or on a laptop
-- a heavy Isaac Sim job requesting 32 GB of VRAM is blocked on a 6 GB RTX A1000 laptop GPU
-- the same job is intended for an L40S-class workstation or production GPU node profile
+- a lightweight mock simulation job runs in CI or on a laptop GPU
+- a heavy Isaac Sim job requesting 32 GB VRAM is blocked on a 6 GB RTX A1000 laptop GPU
+- GPU profiles route workloads to the appropriate node automatically
 
 ---
 
@@ -143,45 +128,34 @@ Example behavior:
 
 ```mermaid
 flowchart TB
-    ROS2[ROS2 / Robot Events] --> Ingest[Telemetry Ingestion]
+    ROS2[ROS2 / Robot Events] --> Bridge[ROS2 Bridge / Mock Bridge]
     Isaac[Isaac Sim / Isaac Lab Jobs] --> Planner[Simulation Planner]
     GPU[NVIDIA GPU Inventory] --> Planner
-    GPU --> Observability[GPU / Fleet Observability]
+    GPU --> Monitor[GPU Monitor]
 
+    Bridge --> Ingest[POST /telemetry]
     Ingest --> Diagnostics[Diagnostic Rules Engine]
-    Diagnostics --> RCA[AI-Assisted RCA]
+    Diagnostics --> RCA[AI RCA Engine · Claude API]
     Diagnostics --> Audit[Tamper-Evident Audit Log]
 
     Planner --> Policy[Safety Policy Checks]
     Policy --> Audit
-    Policy --> Plan[Dry-Run Execution Plan]
+    Policy --> Plan[Simulation Plan]
 
-    Observability --> API[FastAPI Control Plane]
-    Ingest --> API
-    Diagnostics --> API
-    RCA --> API
+    Monitor --> WSManager[WebSocket Manager]
+    Ingest --> WSManager
+    RCA --> WSManager
+    Diagnostics --> WSManager
+
+    WSManager --> Dashboard[Live Dashboard · /dashboard]
+    Plan --> API[FastAPI Control Plane]
     Audit --> API
-    Plan --> API
-
-    API --> CLI[CLI]
-    API --> Dashboard[Dashboard / WebSocket Layer]
+    RCA --> API
 ```
 
 ---
 
 ## Current API surface
-
-The current service exposes control-plane endpoints for:
-
-- health checks
-- telemetry ingestion
-- diagnostic findings
-- audit-log inspection
-- GPU inventory
-- simulation profiles
-- simulation planning
-
-Representative endpoints:
 
 ```text
 GET  /health
@@ -191,6 +165,80 @@ GET  /audit
 GET  /gpu/inventory
 GET  /simulations/profiles
 POST /simulations/plan
+POST /rca/analyze
+GET  /rca
+GET  /dashboard
+WS   /ws
+```
+
+---
+
+## Quick start
+
+### Prerequisites
+
+- Python 3.11+ (conda recommended)
+- NVIDIA GPU with `nvidia-smi` available
+- Anthropic API key for AI RCA (`console.anthropic.com`)
+- ROS2 Jazzy (optional — mock mode works without it)
+
+### Install
+
+```bash
+git clone https://github.com/amitb-gpu/robofleet-nexus.git
+cd robofleet-nexus
+pip install -e ".[dev]"
+export ANTHROPIC_API_KEY=sk-ant-...
+```
+
+### Run the platform
+
+```bash
+# Terminal 1 — API server
+uvicorn robofleet_nexus.api.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Terminal 2 — mock robot bridge (no ROS2 needed)
+python -m robofleet_nexus.adapters.ros2_bridge --mock --robot-id bot_001
+
+# Browser
+open http://localhost:8000/dashboard
+```
+
+### Run with real ROS2
+
+```bash
+# Source ROS2 first — uses system Python 3.12
+source /opt/ros/jazzy/setup.bash
+PYTHONPATH=/path/to/robofleet-nexus/src \
+  /usr/bin/python3 -m robofleet_nexus.adapters.ros2_bridge \
+  --robot-id bot_001 --nexus-url http://localhost:8000
+```
+
+### Trigger AI RCA manually
+
+```bash
+curl -s -X POST http://localhost:8000/telemetry \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event_id": "test-001",
+    "robot_id": "bot_001",
+    "source": "mock",
+    "event_type": "battery_state",
+    "subsystem": "power",
+    "message": "Battery at 14.0%",
+    "metrics": {"battery_pct": 14.0},
+    "metadata": {}
+  }'
+```
+
+The dashboard diagnostic findings panel will show a Claude-generated RCA card within 1–3 seconds.
+
+### Run tests and checks
+
+```bash
+PYTHONPATH=src pytest -q
+ruff check src tests
+mypy src
 ```
 
 ---
@@ -203,58 +251,15 @@ Plan a CI-safe mock simulation job:
 robofleet simulations plan examples/simulations/isaac_warehouse_nav.yaml
 ```
 
-Example result:
-
-```json
-{
-  "job_id": "sim-warehouse-nav-001",
-  "accepted": true,
-  "backend": "mock",
-  "launch_mode": "mock_dry_run",
-  "reason": "Simulation job passed resource and safety planning checks.",
-  "planned_command": [
-    "python",
-    "-m",
-    "robofleet_nexus.isaac.mock_runner",
-    "--job-id=sim-warehouse-nav-001"
-  ],
-  "warnings": []
-}
-```
-
-Plan a heavier Isaac Sim workload intended for an L40S-class GPU profile:
+Plan a heavy Isaac Sim workload — blocked on a 6 GB laptop GPU:
 
 ```bash
 robofleet simulations plan examples/simulations/isaac_heavy_l40s.yaml --fail-on-blocked
 ```
 
-On a 6 GB RTX A1000 laptop GPU, this job is intentionally blocked:
-
-```json
-{
-  "job_id": "sim-heavy-l40s-001",
-  "accepted": false,
-  "backend": "isaac_sim",
-  "launch_mode": "blocked",
-  "reason": "Insufficient eligible NVIDIA GPU capacity for requested simulation job.",
-  "planned_command": [],
-  "warnings": [
-    "required_gpus=1",
-    "eligible_gpus=0",
-    "min_vram_gb=32"
-  ]
-}
-```
-
-This demonstrates the core NVIDIA orchestration behavior:
-
-> detect the GPU environment, evaluate simulation requirements, and block workloads that do not fit before launch.
-
 ---
 
 ## Simulation environment profiles
-
-RoboFleet Nexus models execution environments explicitly.
 
 | Profile | Purpose | Isaac Sim | Isaac Lab | Synthetic Data |
 | --- | --- | --- | --- | --- |
@@ -263,200 +268,6 @@ RoboFleet Nexus models execution environments explicitly.
 | `workstation_l40s` | Single-node NVIDIA L40S workstation | Yes | Yes | Yes |
 | `production_gpu_node` | Future Kubernetes GPU node | Yes | Yes | Yes |
 
-This prevents treating a CI runner, laptop GPU, workstation GPU, and production GPU node as equivalent scheduling targets.
-
----
-
-## Example YAML simulation job
-
-```yaml
-job_id: sim-warehouse-nav-001
-backend: mock
-
-resources:
-  gpu_count: 1
-  min_vram_gb: 8
-  timeout_minutes: 30
-
-parameters:
-  scenario: warehouse_navigation
-  robot_model: nova_carter
-  num_runs: 5
-  random_seed_start: 1000
-  domain_randomization: true
-  collect_synthetic_data: false
-
-safety:
-  allow_physical_robot_commands: false
-  human_approval_required: false
-
-metadata:
-  purpose: cli_yaml_planning_demo
-  nvidia_alignment: isaac_sim_orchestration
-```
-
----
-
-## AI-assisted root-cause analysis direction
-
-RoboFleet Nexus is designed for AI-assisted diagnostics, not uncontrolled AI actuation.
-
-The intended RCA flow is:
-
-```text
-telemetry event
-→ deterministic diagnostic finding
-→ recent robot context
-→ structured AI RCA request
-→ ranked root causes
-→ recommended remediation
-→ risk level
-→ human approval flag
-→ audit record
-```
-
-AI output should remain structured, reviewable, and policy-gated. The model may recommend and explain; it must not bypass safety controls or directly command physical robots.
-
----
-
-## Safety model
-
-RoboFleet Nexus follows a conservative safety model.
-
-Allowed without human approval:
-
-- read-only telemetry inspection
-- GPU inventory checks
-- simulation dry-run planning
-- diagnostic finding creation
-- audit-log reads
-- mock simulation planning
-
-Policy-gated:
-
-- Isaac Sim job execution
-- Isaac Lab experiment execution
-- Kubernetes job creation
-- ROS2 node restart
-- simulation batch cancellation
-- robot mission modification
-
-Blocked by design:
-
-- direct physical robot command paths from AI workflows
-- safety override requests without policy approval
-- unbounded launch loops
-- direct actuator commands
-- silent mutation of audit history
-
----
-
-## Screenshots
-
-### Live fleet dashboard
-
-> Add `docs/assets/dashboard_overview.png` after capturing the running dashboard.
-
-```text
-uvicorn robofleet_nexus.api.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Then open:
-
-```text
-http://localhost:8000/dashboard
-```
-
-When captured:
-
-```markdown
-![RoboFleet Nexus dashboard](docs/assets/dashboard_overview.png)
-```
-
-### GPU-aware Isaac workload blocking
-
-A heavy Isaac Sim job can be rejected before launch when the local GPU does not meet the requested VRAM threshold.
-
-```bash
-robofleet simulations plan examples/simulations/isaac_heavy_l40s.yaml --fail-on-blocked
-```
-
-On a 6 GB RTX A1000 laptop GPU, the planner returns `accepted: false` with an insufficient VRAM reason.
-
-![GPU workload blocked on RTX A1000](docs/assets/cli_gpu_blocked.png)
-
----
-
-## Getting started
-
-### Prerequisites
-
-Recommended for the current development path:
-
-- Python 3.11+
-- `pip`
-- NVIDIA GPU with `nvidia-smi` available for GPU inventory features
-- optional ROS2 Jazzy environment for ROS2 bridge work
-- optional Anthropic API key for AI RCA workflows
-
-### Clone and install
-
-```bash
-git clone https://github.com/amitb-gpu/robofleet-nexus.git
-cd robofleet-nexus
-
-python -m pip install --upgrade pip
-pip install -e ".[dev]"
-```
-
-### Run tests and checks
-
-```bash
-pytest -q
-ruff check src tests
-mypy src
-```
-
-### Run the API
-
-```bash
-uvicorn robofleet_nexus.api.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### Check GPU inventory
-
-```bash
-curl http://127.0.0.1:8000/gpu/inventory | python -m json.tool
-```
-
-### Plan a simulation job through the API
-
-```bash
-curl -X POST http://127.0.0.1:8000/simulations/plan \
-  -H "Content-Type: application/json" \
-  -d '{
-    "job_id": "sim-isaac-001",
-    "backend": "isaac_sim",
-    "resources": {
-      "gpu_count": 1,
-      "min_vram_gb": 16,
-      "timeout_minutes": 45
-    },
-    "parameters": {
-      "scenario": "warehouse_navigation",
-      "robot_model": "nova_carter",
-      "num_runs": 10,
-      "random_seed_start": 2000,
-      "domain_randomization": true,
-      "collect_synthetic_data": true
-    },
-    "safety": {
-      "allow_physical_robot_commands": false,
-      "human_approval_required": false
-    }
-  }' | python -m json.tool
-```
-
 ---
 
 ## Repository structure
@@ -464,6 +275,12 @@ curl -X POST http://127.0.0.1:8000/simulations/plan \
 ```text
 robofleet-nexus/
 ├── docs/
+│   ├── assets/
+│   │   ├── robofleet_nexus_architecture.png
+│   │   ├── dashboard_overview.png
+│   │   └── cli_gpu_blocked.png
+│   ├── RoboFleet_Nexus_Architecture_Walkthrough.md
+│   ├── RoboFleet_Nexus_Platform_Overview.docx
 │   └── nvidia_isaac_architecture.md
 ├── examples/
 │   └── simulations/
@@ -471,13 +288,17 @@ robofleet-nexus/
 │       └── isaac_heavy_l40s.yaml
 ├── src/
 │   └── robofleet_nexus/
-│       ├── api/
-│       ├── audit/
-│       ├── cli/
-│       ├── diagnostics/
-│       ├── gpu/
-│       ├── isaac/
-│       └── telemetry/
+│       ├── adapters/          # ROS2 bridge, mock bridge, remote GPU agent
+│       ├── api/               # FastAPI app, WebSocket manager and routes
+│       ├── audit/             # SHA-256 hash-chain audit log
+│       ├── cli/               # Typer CLI
+│       ├── core/              # GPU monitor
+│       ├── dashboard/         # index.html live dashboard
+│       ├── diagnostics/       # Diagnostic rules engine
+│       ├── gpu/               # GPU inventory
+│       ├── isaac/             # Simulation job spec, scheduler, profiles
+│       ├── rca/               # AI root-cause analysis agent
+│       └── telemetry/         # Pydantic schemas
 ├── tests/
 ├── pyproject.toml
 └── README.md
@@ -487,70 +308,19 @@ robofleet-nexus/
 
 ## Documentation
 
-Additional docs:
-
-- [`docs/nvidia_isaac_architecture.md`](docs/nvidia_isaac_architecture.md)
-
-Recommended future docs:
-
-- `docs/platform_overview.md`
-- `docs/ros2_bridge.md`
-- `docs/ai_rca.md`
-- `docs/safety_model.md`
-- `docs/kubernetes_gpu_scheduling.md`
+- [`docs/RoboFleet_Nexus_Architecture_Walkthrough.md`](docs/RoboFleet_Nexus_Architecture_Walkthrough.md) — layer-by-layer component guide and end-to-end data flow
+- [`docs/RoboFleet_Nexus_Platform_Overview.docx`](docs/RoboFleet_Nexus_Platform_Overview.docx) — investor and stakeholder overview document
+- [`docs/nvidia_isaac_architecture.md`](docs/nvidia_isaac_architecture.md) — NVIDIA Isaac integration architecture
 
 ---
 
-## Roadmap
+## Safety model
 
-### Phase 1 — Current
+Allowed without human approval: read-only telemetry inspection, GPU inventory checks, simulation dry-run planning, diagnostic finding creation, audit-log reads, mock simulation planning.
 
-- FastAPI control plane
-- telemetry ingestion
-- diagnostic findings
-- tamper-evident audit log
-- NVIDIA GPU inventory
-- Isaac Sim / Isaac Lab job planning
-- simulation profiles
-- YAML simulation job loading
-- CLI simulation planning
-- CI checks
+Policy-gated: Isaac Sim job execution, Isaac Lab experiment execution, Kubernetes job creation, ROS2 node restart, robot mission modification.
 
-### Phase 2 — Near term
-
-- simulation run registry
-- CLI command for listing simulation plans/runs
-- dashboard polish
-- ROS2 bridge documentation
-- AI RCA documentation
-- platform overview documentation
-- Prometheus-style metrics endpoint
-
-### Phase 3 — NVIDIA / Isaac expansion
-
-- local Isaac Sim path detection
-- explicit dry-run versus execute mode
-- Isaac Lab experiment job schema
-- result directory tracking
-- synthetic-data job schema
-- run artifact registry
-
-### Phase 4 — Fleet and production readiness
-
-- WebSocket event stream hardening
-- authentication and organization scoping
-- policy-as-code engine
-- Kubernetes Job generation
-- NVIDIA GPU Operator deployment assumptions
-- DCGM / Prometheus integration
-- multi-machine GPU agent hardening
-
-### Phase 5 — Advanced orchestration
-
-- digital twin state mirror
-- fleet-level autonomy workflows
-- plugin system for diagnostic rules and adapters
-- quantum-inspired or quantum-assisted routing experiments
+Blocked by design: direct physical robot command paths from AI workflows, safety override requests without policy approval, unbounded launch loops, silent mutation of audit history.
 
 ---
 
@@ -575,6 +345,6 @@ MIT License.
 
 ## Status
 
-RoboFleet Nexus is an early-stage open-source robotics orchestration platform. The current implementation is intentionally conservative: it plans, validates, diagnoses, audits, and demonstrates GPU-aware orchestration before executing heavyweight robotics workloads.
+RoboFleet Nexus v0.1.0 is a functional open-source robotics orchestration platform verified on NVIDIA RTX A1000 + ROS2 Jazzy hardware. The current implementation plans, validates, diagnoses, audits, and demonstrates GPU-aware orchestration with live AI-powered root-cause analysis.
 
-The long-term goal is to make ROS2 and NVIDIA Isaac-centered robotics workflows more observable, schedulable, auditable, and production-ready.
+Built with FastAPI · ROS2 Jazzy · NVIDIA Isaac · Anthropic Claude · Python 3.12
