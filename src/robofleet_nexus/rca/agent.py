@@ -12,6 +12,32 @@ from robofleet_nexus.telemetry.schemas import DiagnosticFinding, RobotEvent
 
 logger = logging.getLogger("robofleet.rca")
 
+# ── Spend guard ───────────────────────────────────────────────────────────────
+# Hard cap: max RCA calls per day across all robots.
+# At ~2500 tokens/call and $3/MTok that's roughly $0.75/day max.
+_MAX_RCA_CALLS_PER_DAY = 25
+_rca_call_count: int = 0
+_rca_call_date: str = ""
+
+def _check_spend_guard() -> bool:
+    """Returns True if the call is allowed, False if daily cap is reached."""
+    import datetime
+    global _rca_call_count, _rca_call_date
+    today = datetime.date.today().isoformat()
+    if _rca_call_date != today:
+        _rca_call_date = today
+        _rca_call_count = 0
+    if _rca_call_count >= _MAX_RCA_CALLS_PER_DAY:
+        logger.warning(
+            "RCA daily cap reached (%d calls). Skipping to protect API credits. "
+            "Reset tomorrow or raise _MAX_RCA_CALLS_PER_DAY in rca/agent.py.",
+            _MAX_RCA_CALLS_PER_DAY,
+        )
+        return False
+    _rca_call_count += 1
+    logger.info("RCA call %d/%d today", _rca_call_count, _MAX_RCA_CALLS_PER_DAY)
+    return True
+
 _client = AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
 
 SYSTEM_PROMPT = """You are an expert robotics diagnostics engineer embedded in RoboFleet Nexus,
@@ -65,6 +91,9 @@ async def run_rca(
     """
     if not findings:
         return {}
+
+    if not _check_spend_guard():
+        return {"error": "daily_cap_reached", "robot_id": robot_id}
 
     findings_payload = [
         {

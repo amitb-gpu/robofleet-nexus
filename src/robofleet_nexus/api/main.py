@@ -27,7 +27,7 @@ RCA_RESULTS: list[dict] = []
 # Cooldown tracker: robot_id → set of finding titles already RCA'd this session
 # Prevents re-firing RCA on every repeated telemetry event for the same condition
 _RCA_SEEN: dict[str, set[str]] = {}
-_RCA_COOLDOWN_SECONDS = 300  # only re-run RCA for same finding after 5 minutes
+_RCA_COOLDOWN_SECONDS = 900  # only re-run RCA for same finding after 5 minutes
 _RCA_LAST_FIRED: dict[str, float] = {}
 
 
