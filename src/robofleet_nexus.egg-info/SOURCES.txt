@@ -1,3 +1,4 @@
+README.md
 pyproject.toml
 src/robofleet_nexus/__init__.py
 src/robofleet_nexus.egg-info/PKG-INFO
@@ -16,7 +17,15 @@ src/robofleet_nexus/cli/main.py
 src/robofleet_nexus/diagnostics/__init__.py
 src/robofleet_nexus/diagnostics/rules.py
 src/robofleet_nexus/gpu/__init__.py
+src/robofleet_nexus/gpu/inventory.py
 src/robofleet_nexus/isaac/__init__.py
+src/robofleet_nexus/isaac/job_spec.py
+src/robofleet_nexus/isaac/mock_runner.py
+src/robofleet_nexus/isaac/profiles.py
+src/robofleet_nexus/isaac/scheduler.py
 src/robofleet_nexus/ros2/__init__.py
 src/robofleet_nexus/telemetry/__init__.py
 src/robofleet_nexus/telemetry/schemas.py
+tests/test_nvidia_simulation_planner.py
+tests/test_simulation_profiles.py
+tests/test_telemetry_api.py

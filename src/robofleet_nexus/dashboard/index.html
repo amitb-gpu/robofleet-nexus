@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RoboFleet Nexus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ── Reset & tokens ─────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #0d0f14;
+  --bg2:      #13161d;
+  --bg3:      #1a1e28;
+  --border:   rgba(255,255,255,.07);
+  --border2:  rgba(255,255,255,.13);
+  --text:     #e8eaf0;
+  --muted:    #6b7080;
+  --accent:   #4f9cf9;
+  --accent2:  #7c5cfc;
+  --green:    #34d399;
+  --amber:    #fbbf24;
+  --red:      #f87171;
+  --cyan:     #22d3ee;
+  --purple:   #a78bfa;
+  --mono:     'IBM Plex Mono', monospace;
+  --sans:     'Space Grotesk', system-ui, sans-serif;
+  --r:        8px;
+}
+html{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5}
+body{min-height:100vh;overflow-x:hidden}
+
+/* ── Layout ─────────────────────────────────────────────────────── */
+.shell{display:grid;grid-template-rows:52px 1fr;min-height:100vh}
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;border-bottom:1px solid var(--border);
+  background:var(--bg2);position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:.02em}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.header-right{display:flex;align-items:center;gap:16px}
+.conn-badge{
+  display:flex;align-items:center;gap:6px;padding:4px 10px;
+  border-radius:20px;font-size:12px;font-family:var(--mono);
+  border:1px solid var(--border2);background:var(--bg3);
+  transition:all .3s;
+}
+.conn-badge.connected{border-color:rgba(52,211,153,.3);color:var(--green)}
+.conn-badge.disconnected{border-color:rgba(248,113,113,.3);color:var(--red)}
+.conn-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.stat-chip{font-size:11px;color:var(--muted);font-family:var(--mono)}
+
+main{padding:20px;display:flex;flex-direction:column;gap:20px}
+
+/* ── Grid rows ───────────────────────────────────────────────────── */
+.row{display:grid;gap:16px}
+.row-4{grid-template-columns:repeat(4,1fr)}
+.row-3{grid-template-columns:repeat(3,1fr)}
+.row-2-1{grid-template-columns:2fr 1fr}
+.row-1-2{grid-template-columns:1fr 2fr}
+
+/* ── Panel ───────────────────────────────────────────────────────── */
+.panel{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;
+}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+}
+.panel-title{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.panel-body{padding:14px 16px}
+.panel-count{font-size:11px;font-family:var(--mono);color:var(--muted);background:var(--bg3);padding:2px 8px;border-radius:10px;border:1px solid var(--border)}
+
+/* ── KPI stat cards ──────────────────────────────────────────────── */
+.kpi{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px;display:flex;flex-direction:column;gap:6px;
+}
+.kpi-label{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.kpi-value{font-size:28px;font-weight:600;font-family:var(--mono);line-height:1}
+.kpi-sub{font-size:11px;color:var(--muted)}
+.kpi.green .kpi-value{color:var(--green)}
+.kpi.amber .kpi-value{color:var(--amber)}
+.kpi.blue  .kpi-value{color:var(--accent)}
+.kpi.purple .kpi-value{color:var(--purple)}
+
+/* ── GPU cards ───────────────────────────────────────────────────── */
+.gpu-grid{display:flex;flex-direction:column;gap:10px}
+.gpu-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+  padding:12px 14px;
+}
+.gpu-card.high-load{border-color:rgba(251,191,36,.25)}
+.gpu-card.critical-load{border-color:rgba(248,113,113,.35)}
+.gpu-name{font-size:13px;font-weight:500;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.profile-badge{
+  font-size:10px;font-family:var(--mono);padding:2px 7px;
+  border-radius:3px;font-weight:400;
+}
+.profile-LAPTOP_DEV{background:rgba(107,112,128,.2);color:var(--muted)}
+.profile-WORKSTATION_DEV{background:rgba(79,156,249,.15);color:var(--accent)}
+.profile-WORKSTATION_HIGH{background:rgba(124,92,252,.15);color:var(--purple)}
+.profile-PRODUCTION{background:rgba(52,211,153,.15);color:var(--green)}
+.gpu-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.gm-label{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.gm-value{font-size:14px;font-weight:500;font-family:var(--mono)}
+.bar-track{height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-top:4px}
+.bar-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.bar-fill.vram{background:var(--accent2)}
+.bar-fill.util{background:var(--cyan)}
+.bar-fill.temp{background:var(--amber)}
+.bar-fill.warn{background:var(--amber)}
+.bar-fill.crit{background:var(--red)}
+.gpu-wsl-tag{font-size:10px;color:var(--muted);font-family:var(--mono);opacity:.6}
+
+/* ── Robot fleet table ───────────────────────────────────────────── */
+.robot-table{width:100%;border-collapse:collapse;font-size:12px}
+.robot-table th{text-align:left;padding:6px 10px;color:var(--muted);font-weight:400;letter-spacing:.05em;text-transform:uppercase;font-size:10px;border-bottom:1px solid var(--border)}
+.robot-table td{padding:7px 10px;border-bottom:1px solid var(--border);font-family:var(--mono)}
+.robot-table tr:last-child td{border-bottom:none}
+.robot-table tr:hover td{background:var(--bg3)}
+.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.s-ok{background:var(--green)}
+.s-warn{background:var(--amber);animation:pulse 1.5s infinite}
+.s-error{background:var(--red);animation:pulse .8s infinite}
+.s-offline{background:var(--muted)}
+.batt-bar{display:inline-block;width:36px;height:6px;background:rgba(255,255,255,.08);border-radius:2px;vertical-align:middle;position:relative;overflow:hidden}
+.batt-fill{position:absolute;left:0;top:0;height:100%;border-radius:2px;transition:width .5s}
+
+/* ── Event stream ────────────────────────────────────────────────── */
+.event-stream{
+  height:280px;overflow-y:auto;font-family:var(--mono);font-size:11px;
+  display:flex;flex-direction:column-reverse;gap:1px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.event-row{
+  display:flex;gap:10px;padding:4px 0;border-bottom:1px solid var(--border);
+  animation:fadein .2s ease;
+}
+@keyframes fadein{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.ev-ts{color:var(--muted);white-space:nowrap;min-width:84px}
+.ev-type{min-width:80px}
+.ev-type.telemetry{color:var(--accent)}
+.ev-type.gpu_snapshot{color:var(--cyan)}
+.ev-type.diagnostic{color:var(--amber)}
+.ev-type.sim_job{color:var(--purple)}
+.ev-type.audit{color:var(--green)}
+.ev-type.ros2_event{color:#f472b6}
+.ev-type.error{color:var(--red)}
+.ev-msg{color:var(--text);opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── Diagnostic findings ─────────────────────────────────────────── */
+.finding-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.finding{
+  background:var(--bg3);border-left:3px solid var(--muted);
+  border-radius:0 4px 4px 0;padding:8px 10px;font-size:12px;
+}
+.finding.ERROR{border-left-color:var(--red)}
+.finding.WARNING{border-left-color:var(--amber)}
+.finding.INFO{border-left-color:var(--accent)}
+.finding-title{font-weight:500;margin-bottom:2px}
+.finding-meta{font-family:var(--mono);font-size:10px;color:var(--muted)}
+
+/* ── Sim job queue ───────────────────────────────────────────────── */
+.job-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.job{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:5px;padding:9px 12px;font-size:12px;
+}
+.job-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.job-name{font-weight:500;font-size:13px}
+.job-status{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:10px;font-weight:400}
+.status-PLANNING{background:rgba(107,112,128,.2);color:var(--muted)}
+.status-QUEUED{background:rgba(251,191,36,.15);color:var(--amber)}
+.status-RUNNING{background:rgba(52,211,153,.15);color:var(--green)}
+.status-BLOCKED{background:rgba(248,113,113,.15);color:var(--red)}
+.status-DONE{background:rgba(79,156,249,.15);color:var(--accent)}
+.job-meta{font-family:var(--mono);font-size:10px;color:var(--muted)}
+
+/* ── Audit log ───────────────────────────────────────────────────── */
+.audit-stream{
+  height:200px;overflow-y:auto;font-size:11px;font-family:var(--mono);
+  display:flex;flex-direction:column-reverse;gap:2px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.audit-row{display:flex;gap:10px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.audit-ts{color:var(--muted);white-space:nowrap;min-width:84px}
+.audit-action{color:var(--green);min-width:160px}
+.audit-detail{color:var(--text);opacity:.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── No-data placeholder ─────────────────────────────────────────── */
+.empty{padding:24px;text-align:center;color:var(--muted);font-size:12px;font-family:var(--mono)}
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+@media(max-width:1200px){.row-4{grid-template-columns:repeat(2,1fr)}.row-2-1,.row-1-2{grid-template-columns:1fr}.row-3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.row-4,.row-3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── Header ──────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-dot" id="logo-dot"></div>
+    RoboFleet Nexus
+  </div>
+  <div class="header-right">
+    <span class="stat-chip" id="hdr-clients">0 clients</span>
+    <span class="stat-chip" id="hdr-events">0 events</span>
+    <div class="conn-badge disconnected" id="conn-badge">
+      <div class="conn-dot"></div>
+      <span id="conn-label">connecting…</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── Main ────────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- KPI row -->
+  <div class="row row-4">
+    <div class="kpi blue"><div class="kpi-label">Active robots</div><div class="kpi-value" id="kpi-robots">—</div><div class="kpi-sub">fleet size</div></div>
+    <div class="kpi green"><div class="kpi-label">GPU devices</div><div class="kpi-value" id="kpi-gpus">—</div><div class="kpi-sub">detected</div></div>
+    <div class="kpi amber"><div class="kpi-label">Sim jobs</div><div class="kpi-value" id="kpi-jobs">—</div><div class="kpi-sub">queued / running</div></div>
+    <div class="kpi purple"><div class="kpi-label">Diagnostics</div><div class="kpi-value" id="kpi-diag">—</div><div class="kpi-sub">active findings</div></div>
+  </div>
+
+  <!-- GPU + Robot row -->
+  <div class="row row-2-1">
+
+    <!-- GPU panel -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">GPU inventory</span>
+        <span class="panel-count" id="gpu-count">0 devices</span>
+      </div>
+      <div class="panel-body">
+        <div class="gpu-grid" id="gpu-grid">
+          <div class="empty">Waiting for first GPU snapshot…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Robot fleet panel -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Robot fleet</span>
+        <span class="panel-count" id="robot-count">0 robots</span>
+      </div>
+      <div class="panel-body" style="padding:0 0 4px">
+        <div id="robot-fleet">
+          <div class="empty">No robots connected</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Event stream + Diagnostics + Jobs -->
+  <div class="row row-3">
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Live event stream</span>
+        <span class="panel-count" id="event-count">0</span>
+      </div>
+      <div class="panel-body" style="padding:8px 12px">
+        <div class="event-stream" id="event-stream">
+          <div class="empty">Waiting for events…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Diagnostic findings</span>
+        <span class="panel-count" id="diag-count">0</span>
+      </div>
+      <div class="panel-body">
+        <div class="finding-list" id="finding-list">
+          <div class="empty">No active findings</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Simulation job queue</span>
+        <span class="panel-count" id="job-count">0</span>
+      </div>
+      <div class="panel-body">
+        <div class="job-list" id="job-list">
+          <div class="empty">No simulation jobs</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Audit log -->
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-title">Audit log</span>
+      <span class="panel-count" id="audit-count">0</span>
+    </div>
+    <div class="panel-body" style="padding:8px 12px">
+      <div class="audit-stream" id="audit-stream">
+        <div class="empty">No audit entries yet</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────
+const state = {
+  robots: {},      // robot_id → latest telemetry
+  gpus: [],        // latest GPU snapshot
+  findings: {},    // robot_id → [findings]
+  jobs: {},        // job_id  → job
+  rca: {},         // robot_id → latest RCA
+  eventCount: 0,
+  auditCount: 0,
+};
+
+// ── WebSocket ─────────────────────────────────────────────────────────────
+const WS_URL = `ws://${location.host}/ws`;
+let ws = null;
+let reconnectTimer = null;
+
+function connect() {
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    clearTimeout(reconnectTimer);
+    setBadge(true);
+    addEvent('system', 'WebSocket connected');
+  };
+
+  ws.onmessage = (e) => {
+    let msg;
+    try { msg = JSON.parse(e.data); } catch { return; }
+    dispatch(msg);
+  };
+
+  ws.onclose = () => {
+    setBadge(false);
+    addEvent('error', 'Disconnected — reconnecting in 3 s');
+    reconnectTimer = setTimeout(connect, 3000);
+  };
+
+  ws.onerror = () => {
+    ws.close();
+  };
+}
+
+// ── Dispatch ──────────────────────────────────────────────────────────────
+function dispatch(msg) {
+  state.eventCount++;
+  document.getElementById('hdr-events').textContent = `${state.eventCount} events`;
+
+  switch (msg.type) {
+    case 'gpu_snapshot':    handleGpuSnapshot(msg); break;
+    case 'telemetry':       handleTelemetry(msg);   break;
+    case 'diagnostic':      handleDiagnostic(msg);  break;
+    case 'sim_job':         handleSimJob(msg);       break;
+    case 'audit':           handleAudit(msg);        break;
+    case 'ros2_event':      handleRos2(msg);         break;
+    case 'rca_result':      handleRca(msg);          break;
+  }
+
+  const ts = (msg.ts || new Date().toISOString()).slice(11, 19);
+  addEvent(msg.type, eventSummary(msg), ts);
+}
+
+function eventSummary(msg) {
+  switch (msg.type) {
+    case 'gpu_snapshot': return `${msg.gpus?.length ?? 0} GPU(s) reported`;
+    case 'telemetry':    return `${msg.robot_id}: ${JSON.stringify(msg.data).slice(0, 60)}`;
+    case 'diagnostic':   return `${msg.robot_id}: ${msg.findings?.length ?? 0} finding(s)`;
+    case 'sim_job':      return `job ${msg.job?.job_id ?? ''} → ${msg.job?.status ?? ''}`;
+    case 'audit':        return `${msg.entry?.action ?? ''} ${msg.entry?.detail ?? ''}`;
+    case 'ros2_event':   return `${msg.robot_id} ${msg.topic}`;
+    default:             return msg.type;
+  }
+}
+
+// ── GPU ───────────────────────────────────────────────────────────────────
+function handleGpuSnapshot(msg) {
+  state.gpus = msg.gpus || [];
+  document.getElementById('kpi-gpus').textContent = state.gpus.length;
+  document.getElementById('gpu-count').textContent = `${state.gpus.length} device${state.gpus.length !== 1 ? 's' : ''}`;
+
+  const grid = document.getElementById('gpu-grid');
+  if (!state.gpus.length) {
+    grid.innerHTML = '<div class="empty">No NVIDIA GPUs detected</div>';
+    return;
+  }
+  grid.innerHTML = state.gpus.map(g => {
+    const utilClass = g.utilization_pct > 90 ? 'crit' : g.utilization_pct > 70 ? 'warn' : '';
+    const cardClass = g.utilization_pct > 90 ? 'critical-load' : g.utilization_pct > 65 ? 'high-load' : '';
+    const vramPct   = Math.round(g.vram_pct);
+    const tempPct   = Math.min(100, Math.round(g.temperature_c / 1.0));
+    return `
+    <div class="gpu-card ${cardClass}">
+      <div class="gpu-name">
+        <span>${g.name}</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${g.wsl ? '<span class="gpu-wsl-tag">WSL</span>' : ''}
+          <span class="profile-badge profile-${g.profile}">${g.profile}</span>
+        </div>
+      </div>
+      <div class="gpu-metrics">
+        <div>
+          <div class="gm-label">VRAM</div>
+          <div class="gm-value">${g.vram_used_mb} <span style="font-size:10px;color:var(--muted)">/ ${g.vram_total_mb} MiB</span></div>
+          <div class="bar-track"><div class="bar-fill vram" style="width:${vramPct}%"></div></div>
+        </div>
+        <div>
+          <div class="gm-label">GPU util</div>
+          <div class="gm-value">${g.utilization_pct}<span style="font-size:10px;color:var(--muted)"> %</span></div>
+          <div class="bar-track"><div class="bar-fill util ${utilClass}" style="width:${g.utilization_pct}%"></div></div>
+        </div>
+        <div>
+          <div class="gm-label">Temp</div>
+          <div class="gm-value">${g.temperature_c}<span style="font-size:10px;color:var(--muted)"> °C</span></div>
+          <div class="bar-track"><div class="bar-fill temp ${g.temperature_c > 80 ? 'crit' : ''}" style="width:${Math.min(100,g.temperature_c / 90 * 100)}%"></div></div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-family:var(--mono)">
+        <span>Pwr ${g.power_draw_w.toFixed(0)} / ${g.power_limit_w.toFixed(0)} W</span>
+        <span>Driver ${g.driver_version}</span>
+        <span>CUDA ${g.cuda_version}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Telemetry ─────────────────────────────────────────────────────────────
+function handleTelemetry(msg) {
+  const data = msg.data || {};
+  const metrics = data.metrics || {};
+  const metadata = data.metadata || {};
+  const prev = state.robots[msg.robot_id] || {};
+  state.robots[msg.robot_id] = {
+    ...prev,
+    id: msg.robot_id,
+    ts: msg.ts,
+    status: data.severity === 'critical' ? 'error' : data.severity === 'warning' ? 'warn' : 'ok',
+    subsystem: data.subsystem || prev.subsystem,
+    message: data.message || prev.message,
+    location: metadata.location || prev.location,
+    battery_pct: metrics.battery_pct != null ? metrics.battery_pct : prev.battery_pct,
+    ...Object.fromEntries(Object.entries(metrics).filter(([k]) => k !== 'battery_pct')),
+  };
+  renderRobotTable();
+  document.getElementById('kpi-robots').textContent = Object.keys(state.robots).length;
+}
+
+function renderRobotTable() {
+  const robots = Object.values(state.robots);
+  const el = document.getElementById('robot-fleet');
+  document.getElementById('robot-count').textContent = `${robots.length} robot${robots.length !== 1 ? 's' : ''}`;
+  if (!robots.length) {
+    el.innerHTML = '<div class="empty">No robots connected</div>';
+    return;
+  }
+  const rows = robots.map(r => {
+    const status = r.status || 'unknown';
+    const dotClass = status === 'ok' ? 's-ok' : status === 'warn' ? 's-warn' : status === 'error' ? 's-error' : 's-offline';
+    const batt = r.battery_pct != null ? r.battery_pct : null;
+    const battColor = batt == null ? 'var(--muted)' : batt > 60 ? 'var(--green)' : batt > 25 ? 'var(--amber)' : 'var(--red)';
+    const battEl = batt != null
+      ? `<span class="batt-bar"><span class="batt-fill" style="width:${batt}%;background:${battColor}"></span></span> ${batt}%`
+      : '<span style="color:var(--muted)">—</span>';
+    const ts = r.ts ? r.ts.slice(11,19) : '—';
+    return `<tr>
+      <td><span class="status-dot ${dotClass}"></span>${r.id}</td>
+      <td>${status}</td>
+      <td>${battEl}</td>
+      <td>${r.location || '—'}</td>
+      <td style="color:var(--muted)">${ts}</td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `
+  <table class="robot-table">
+    <thead><tr><th>Robot ID</th><th>Status</th><th>Battery</th><th>Location</th><th>Last seen</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// ── Diagnostics ───────────────────────────────────────────────────────────
+function handleDiagnostic(msg) {
+  if (msg.findings?.length) {
+    state.findings[msg.robot_id] = msg.findings;
+  } else {
+    delete state.findings[msg.robot_id];
+  }
+  renderFindings();
+}
+
+function renderFindings() {
+  const all = Object.entries(state.findings).flatMap(([rid, fs]) =>
+    fs.map(f => ({ ...f, robot_id: rid }))
+  );
+  const el = document.getElementById('finding-list');
+  const count = document.getElementById('diag-count');
+  count.textContent = all.length;
+  document.getElementById('kpi-diag').textContent = all.length;
+
+  let html = '';
+
+  // RCA results per robot
+  for (const [rid, rca] of Object.entries(state.rca)) {
+    const riskColor = {critical:'var(--red)',high:'var(--amber)',medium:'var(--accent)',low:'var(--green)'}[rca.risk_level] || 'var(--muted)';
+    html += `<div style="background:var(--bg3);border:1px solid var(--border);border-left:3px solid ${riskColor};border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:500;color:var(--text)">🤖 AI RCA — ${rid}</span>
+        <span style="font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.07);color:${riskColor}">${rca.risk_level?.toUpperCase() || 'UNKNOWN'} RISK</span>
+      </div>
+      <div style="font-size:12px;color:var(--text);margin-bottom:8px">${rca.summary || ''}</div>
+      ${(rca.root_causes || []).map(rc => `
+        <div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:2px">
+          <span style="color:var(--amber)">#${rc.rank}</span> ${rc.cause}
+          <span style="opacity:.6"> [${rc.confidence}]</span>
+        </div>`).join('')}
+      ${(rca.recommended_actions || []).filter(a => a.priority === 'immediate').map(a => `
+        <div style="font-size:11px;color:var(--red);margin-top:4px">⚡ ${a.action}</div>`).join('')}
+      <div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-top:6px">
+        ETA: ${rca.estimated_resolution_time || '?'} · ${rca.findings_analyzed || 0} finding(s) · tokens: ${(rca.input_tokens||0)+(rca.output_tokens||0)}
+      </div>
+    </div>`;
+  }
+
+  if (!all.length && !html) {
+    el.innerHTML = '<div class="empty">No active findings</div>';
+    return;
+  }
+
+  html += all.map(f => `
+    <div class="finding ${f.severity || 'INFO'}">
+      <div class="finding-title">${f.title || f.message || '(no message)'}</div>
+      <div class="finding-meta">${f.robot_id} · ${f.severity || 'INFO'} · ${(f.ts || '').slice(11,19) || 'now'}</div>
+    </div>`).join('');
+
+  el.innerHTML = html;
+}
+
+// ── Sim jobs ──────────────────────────────────────────────────────────────
+function handleSimJob(msg) {
+  const job = msg.job;
+  if (!job?.job_id) return;
+  state.jobs[job.job_id] = job;
+  renderJobs();
+}
+
+function renderJobs() {
+  const jobs = Object.values(state.jobs);
+  const el = document.getElementById('job-list');
+  const count = document.getElementById('job-count');
+  count.textContent = jobs.length;
+  document.getElementById('kpi-jobs').textContent = jobs.filter(j => ['QUEUED','RUNNING'].includes(j.status)).length;
+  if (!jobs.length) {
+    el.innerHTML = '<div class="empty">No simulation jobs</div>';
+    return;
+  }
+  el.innerHTML = jobs.slice().reverse().map(j => `
+    <div class="job">
+      <div class="job-header">
+        <span class="job-name">${j.name || j.job_id}</span>
+        <span class="job-status status-${j.status || 'PLANNING'}">${j.status || 'PLANNING'}</span>
+      </div>
+      <div class="job-meta">${j.environment || '—'} · ${j.vram_required_mb ? j.vram_required_mb+' MiB req.' : ''} · ${(j.ts || '').slice(11,19) || ''}</div>
+    </div>`).join('');
+}
+
+// ── Audit ─────────────────────────────────────────────────────────────────
+function handleAudit(msg) {
+  state.auditCount++;
+  document.getElementById('audit-count').textContent = state.auditCount;
+  const e = msg.entry || {};
+  const ts = (msg.ts || '').slice(11,19) || '—';
+  const row = document.createElement('div');
+  row.className = 'audit-row';
+  row.innerHTML = `
+    <span class="audit-ts">${ts}</span>
+    <span class="audit-action">${e.action || 'event'}</span>
+    <span class="audit-detail">${e.detail || JSON.stringify(e).slice(0,80)}</span>`;
+  prependToStream('audit-stream', row);
+}
+
+// ── ROS2 events ───────────────────────────────────────────────────────────
+function handleRos2(msg) {
+  // ROS2 topic messages update the relevant robot's state
+  if (msg.topic === '/battery_state' && msg.data?.percentage != null) {
+    if (!state.robots[msg.robot_id]) state.robots[msg.robot_id] = { id: msg.robot_id };
+    state.robots[msg.robot_id].battery_pct = Math.round(msg.data.percentage * 100);
+    state.robots[msg.robot_id].status = 'ok';
+    state.robots[msg.robot_id].ts = msg.ts;
+    renderRobotTable();
+    document.getElementById('kpi-robots').textContent = Object.keys(state.robots).length;
+  }
+}
+
+// ── Event stream ──────────────────────────────────────────────────────────
+const MAX_EVENTS = 200;
+
+function addEvent(type, msg, ts) {
+  const stream = document.getElementById('event-stream');
+  // Remove placeholder
+  const empty = stream.querySelector('.empty');
+  if (empty) empty.remove();
+
+  const row = document.createElement('div');
+  row.className = 'event-row';
+  row.innerHTML = `
+    <span class="ev-ts">${ts || new Date().toISOString().slice(11,19)}</span>
+    <span class="ev-type ${type}">${type}</span>
+    <span class="ev-msg">${escHtml(msg)}</span>`;
+
+  stream.prepend(row);
+
+  // Trim to MAX_EVENTS
+  while (stream.children.length > MAX_EVENTS) {
+    stream.removeChild(stream.lastChild);
+  }
+
+  document.getElementById('event-count').textContent = Math.min(state.eventCount, MAX_EVENTS);
+}
+
+function prependToStream(id, el) {
+  const stream = document.getElementById(id);
+  const empty = stream.querySelector('.empty');
+  if (empty) empty.remove();
+  stream.prepend(el);
+  while (stream.children.length > 100) stream.removeChild(stream.lastChild);
+}
+
+// ── UI helpers ────────────────────────────────────────────────────────────
+function setBadge(connected) {
+  const badge = document.getElementById('conn-badge');
+  const label = document.getElementById('conn-label');
+  const dot   = document.getElementById('logo-dot');
+  if (connected) {
+    badge.className = 'conn-badge connected';
+    label.textContent = 'connected';
+    dot.style.background = 'var(--green)';
+  } else {
+    badge.className = 'conn-badge disconnected';
+    label.textContent = 'disconnected';
+    dot.style.background = 'var(--red)';
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+connect();
+</script>
+</body>
+</html>

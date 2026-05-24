@@ -5,9 +5,11 @@ pydantic-settings
 typer
 rich
 httpx
+PyYAML
 
 [dev]
 pytest
 pytest-cov
 ruff
 mypy
+types-PyYAML
