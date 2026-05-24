@@ -506,6 +506,13 @@ function handleDiagnostic(msg) {
   renderFindings();
 }
 
+function handleRca(msg) {
+  const rca = msg.rca;
+  if (!rca?.robot_id) return;
+  state.rca[rca.robot_id] = rca;
+  renderFindings();
+}
+
 function renderFindings() {
   const all = Object.entries(state.findings).flatMap(([rid, fs]) =>
     fs.map(f => ({ ...f, robot_id: rid }))

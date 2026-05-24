@@ -98,6 +98,29 @@ async def run_rca(
         "recent_telemetry_context": events_payload,
     }, indent=2)
 
+    # Remove this block once API credits are confirmed
+    if not _client.api_key or True:  # flip to False when credits clear
+        import random
+        mock = {
+            "summary": f"Robot {robot_id} has {len(findings)} active finding(s) requiring attention.",
+            "root_causes": [{"rank": 1, "cause": findings[0].title, "confidence": "high",
+                "subsystem": "power", "evidence": [e for e in findings[0].evidence]}],
+            "recommended_actions": [{"priority": "immediate",
+                "action": a, "rationale": "Diagnostic rule triggered."} 
+                for a in findings[0].recommended_actions[:2]],
+            "requires_human_approval": True,
+            "risk_level": findings[0].severity.value if findings[0].severity.value != "warning" else "high",
+            "estimated_resolution_time": "10 minutes",
+        }
+        mock["rca_id"] = str(__import__("uuid").uuid4())
+        mock["robot_id"] = robot_id
+        mock["timestamp"] = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
+        mock["findings_analyzed"] = len(findings)
+        mock["input_tokens"] = 0
+        mock["output_tokens"] = 0
+        logger.info("MOCK RCA for %s — risk=%s findings=%d", robot_id, mock["risk_level"], len(findings))
+        return mock
+
     try:
         response = await _client.messages.create(
             model="claude-sonnet-4-20250514",
