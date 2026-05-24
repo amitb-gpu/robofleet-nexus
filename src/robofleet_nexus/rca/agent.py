@@ -100,7 +100,6 @@ async def run_rca(
 
     # Remove this block once API credits are confirmed
     if not _client.api_key or True:  # flip to False when credits clear
-        import random
         mock = {
             "summary": f"Robot {robot_id} has {len(findings)} active finding(s) requiring attention.",
             "root_causes": [{"rank": 1, "cause": findings[0].title, "confidence": "high",

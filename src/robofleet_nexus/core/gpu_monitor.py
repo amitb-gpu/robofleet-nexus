@@ -15,14 +15,12 @@ Supported device profiles (auto-detected by VRAM):
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import shutil
 import subprocess
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 

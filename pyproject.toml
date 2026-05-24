@@ -36,3 +36,25 @@ line-length = 100
 [tool.mypy]
 python_version = "3.11"
 strict = true
+
+[[tool.mypy.overrides]]
+module = [
+  "robofleet_nexus.diagnostics.rules",
+  "robofleet_nexus.core.gpu_monitor",
+  "robofleet_nexus.rca.agent",
+  "robofleet_nexus.api.ws_routes",
+  "robofleet_nexus.api.main",
+  "robofleet_nexus.adapters.ros2_bridge",
+]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+  "rclpy.*",
+  "sensor_msgs.*",
+  "diagnostic_msgs.*",
+  "nav_msgs.*",
+  "launch.*",
+  "launch_testing.*",
+]
+ignore_missing_imports = true

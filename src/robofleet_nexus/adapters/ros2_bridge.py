@@ -81,9 +81,12 @@ def _diagnostics_to_events(robot_id: str, msg: Any) -> list[dict[str, Any]]:
 def _joint_state_to_event(robot_id: str, msg: Any) -> dict[str, Any]:
     metrics: dict[str, float] = {}
     for i, name in enumerate(msg.name):
-        if i < len(msg.position): metrics[f"{name}.pos"] = round(float(msg.position[i]), 4)
-        if i < len(msg.velocity): metrics[f"{name}.vel"] = round(float(msg.velocity[i]), 4)
-        if i < len(msg.effort):   metrics[f"{name}.eff"] = round(float(msg.effort[i]), 4)
+        if i < len(msg.position):
+            metrics[f"{name}.pos"] = round(float(msg.position[i]), 4)
+        if i < len(msg.velocity):
+            metrics[f"{name}.vel"] = round(float(msg.velocity[i]), 4)
+        if i < len(msg.effort):
+            metrics[f"{name}.eff"] = round(float(msg.effort[i]), 4)
     return _make_event(
         robot_id, "ros2", "joint_state", "kinematics",
         f"{len(msg.name)} joint(s) reported",
@@ -195,7 +198,8 @@ def build_ros2_bridge(robot_id: str, nexus_url: str,
         logger.error("rclpy not found: %s\nRun: source /opt/ros/humble/setup.bash", exc)
         sys.exit(1)
 
-    import queue, threading
+    import queue
+    import threading
 
     event_queue: queue.Queue[dict[str, Any]] = queue.Queue(maxsize=500)
 
@@ -228,8 +232,10 @@ def build_ros2_bridge(robot_id: str, nexus_url: str,
             subscribe = self.create_subscription
 
             def enqueue(e: dict) -> None:
-                try: event_queue.put_nowait(e)
-                except Exception: pass
+                try:
+                    event_queue.put_nowait(e)
+                except Exception:
+                    pass
 
             if not topics or "/battery_state" in topics:
                 self._subs.append(subscribe(BatteryState, "/battery_state",
