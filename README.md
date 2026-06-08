@@ -110,6 +110,80 @@ The platform may plan, validate, recommend, and audit. Physical robot command pa
 
 ---
 
+## LeRobot v3 dataset export
+
+RoboFleet Nexus captures every telemetry event into an in-memory episode buffer and can export
+spec-compliant [LeRobot v3](https://github.com/huggingface/lerobot) datasets directly from the
+running platform — no separate data pipeline required.
+
+Each exported dataset is ready for:
+- **Cosmos 3 post-training** (Forward Dynamics, Inverse Dynamics, Policy modes)
+- **HuggingFace LeRobot** training pipelines
+- Any framework that reads Parquet + standard joint state format
+
+### What gets captured automatically
+
+| Channel | Source topic / event | LeRobot column |
+|---|---|---|
+| Joint positions | `/joint_states` → `joint_state` event | `action`, `observation.state` |
+| Joint velocities | `/joint_states` → `joint_state` event | `observation.velocity` |
+| Joint efforts | `/joint_states` → `joint_state` event | `observation.effort` |
+| Robot pose | `/odom` → `odometry` event | `observation.pose` |
+| Battery level | `/battery_state` → `battery_state` event | `observation.battery` |
+
+Episodes are detected automatically — a 30-second gap between joint state events closes the
+current episode and starts a new one.
+
+### Export workflow
+
+```bash
+# Check how many frames are buffered
+robofleet dataset buffer
+
+# Export completed episodes (task label embedded in metadata)
+robofleet dataset export --robot-id bot_001 --task pick_and_place
+
+# Export the current open episode too (useful mid-session)
+robofleet dataset export --robot-id bot_001 --task pick_and_place --include-open
+
+# Inspect the exported dataset
+robofleet dataset inspect ~/robofleet_datasets/bot_001/<export_dir>
+```
+
+REST API equivalents:
+
+```text
+GET  /dataset/buffer       — buffer stats per robot
+POST /dataset/export       — flush episodes and write Parquet dataset
+GET  /dataset/exports      — list exports this session
+```
+
+### Output structure (LeRobot v3 spec)
+
+```
+~/robofleet_datasets/<robot_id>/<N>eps_<timestamp>/
+    meta/
+        info.json           — feature schema, fps, episode count
+        episodes.jsonl      — per-episode metadata
+        tasks.jsonl         — task labels
+    data/
+        chunk-000/
+            episode_000000.parquet
+            episode_000001.parquet
+```
+
+### Path to Cosmos 3 fine-tuning
+
+```
+ROS2 topics → RoboFleet bridge → episode buffer
+→ LeRobot v3 Parquet export
+→ Cosmos 3 dataset adapter (yam_lerobot_dataset.py equivalent)
+→ torchrun SFT post-training
+→ .safetensors checkpoint
+→ Cosmos 3 FDM / Policy inference
+```
+---
+
 ## NVIDIA robotics orchestration layer
 
 RoboFleet Nexus treats NVIDIA robotics infrastructure as orchestration targets rather than systems to reimplement. The platform sits above Isaac Sim, Isaac Lab, Isaac ROS / ROS2 bridge workflows, and NVIDIA GPUs for simulation and acceleration workloads.
