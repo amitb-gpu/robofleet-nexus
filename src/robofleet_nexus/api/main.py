@@ -11,6 +11,8 @@ from robofleet_nexus.telemetry.schemas import DiagnosticFinding, RobotEvent
 from robofleet_nexus.api.ws_routes import ws_router, lifespan, on_telemetry_ingested
 from robofleet_nexus.api.ws_manager import manager as ws_manager
 from robofleet_nexus.rca.agent import run_rca
+from robofleet_nexus.lerobot.episode_buffer import episode_buffer
+from robofleet_nexus.lerobot.routes import dataset_router
 
 app = FastAPI(
     lifespan=lifespan,
@@ -19,15 +21,16 @@ app = FastAPI(
     version="0.1.0",
 )
 app.include_router(ws_router)
+app.include_router(dataset_router)
 
 AUDIT_LOG = HashChainAuditLog()
 EVENTS: list[RobotEvent] = []
 FINDINGS: list[DiagnosticFinding] = []
 RCA_RESULTS: list[dict] = []
+
 # Cooldown tracker: robot_id → set of finding titles already RCA'd this session
-# Prevents re-firing RCA on every repeated telemetry event for the same condition
 _RCA_SEEN: dict[str, set[str]] = {}
-_RCA_COOLDOWN_SECONDS = 900  # only re-run RCA for same finding after 5 minutes
+_RCA_COOLDOWN_SECONDS = 900  # only re-run RCA for same finding after 15 minutes
 _RCA_LAST_FIRED: dict[str, float] = {}
 
 
@@ -55,6 +58,10 @@ async def ingest_telemetry(
         actor="api",
         payload=event.model_dump(mode="json"),
     )
+
+    # Feed LeRobot episode buffer
+    episode_buffer.ingest(event)
+
     findings = evaluate_event(event)
     FINDINGS.extend(findings)
     for finding in findings:

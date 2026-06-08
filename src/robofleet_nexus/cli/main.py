@@ -8,9 +8,12 @@ from rich.console import Console
 from robofleet_nexus.isaac.loader import SimulationJobLoadError, load_simulation_job
 from robofleet_nexus.isaac.scheduler import plan_simulation_job
 
+
 app = typer.Typer(help="RoboFleet Nexus CLI")
 simulations_app = typer.Typer(help="Simulation orchestration commands")
 app.add_typer(simulations_app, name="simulations")
+from robofleet_nexus.lerobot.cli import dataset_app
+app.add_typer(dataset_app, name="dataset")
 
 console = Console()
 
