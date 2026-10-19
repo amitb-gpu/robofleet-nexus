@@ -78,39 +78,88 @@ a production robotics orchestration platform. You perform root cause analysis on
 diagnostic findings in real time.
 
 You receive:
-- A list of active diagnostic findings (structured)
+- The robot's distinct active findings, each with how many times it has occurred
 - Recent telemetry events from the robot (metrics, subsystem, message)
 - Robot ID and timestamp
 
-You must respond with ONLY a valid JSON object — no preamble, no markdown, no explanation outside the JSON.
-
-Response schema:
-{
-  "summary": "One sentence describing the overall robot health situation",
-  "root_causes": [
-    {
-      "rank": 1,
-      "cause": "Concise description of the root cause",
-      "confidence": "high|medium|low",
-      "subsystem": "which subsystem is affected",
-      "evidence": ["specific metric or event supporting this cause"]
-    }
-  ],
-  "recommended_actions": [
-    {
-      "priority": "immediate|soon|monitor",
-      "action": "Specific actionable step for the operator or system",
-      "rationale": "Why this action addresses the root cause"
-    }
-  ],
-  "requires_human_approval": true,
-  "risk_level": "critical|high|medium|low",
-  "estimated_resolution_time": "e.g. 5 minutes, 1 hour, unknown"
-}
+Report your analysis by calling the report_rca tool. Be brief and specific:
+- summary: one sentence, at most 40 words
+- at most 3 root causes, each with at most 3 short evidence items
+- at most 4 recommended actions
 
 Be precise and robotics-specific. Reference actual metric values from the evidence.
 Prioritise safety — if there is any risk of hardware damage or injury, say so explicitly.
+Findings titled "...by safety guard" come from a runtime guard between a learned policy and
+the robot: a halt means the guard stopped the policy and is holding the last safe command.
 """
+
+# Forcing this tool makes the model return a parsed object instead of free text, so a
+# stray character can't break JSON parsing.
+RCA_TOOL = {
+    "name": "report_rca",
+    "description": "Report the root cause analysis for the robot's active findings.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {"type": "string"},
+            "root_causes": {
+                "type": "array",
+                "maxItems": 3,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "rank": {"type": "integer"},
+                        "cause": {"type": "string"},
+                        "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+                        "subsystem": {"type": "string"},
+                        "evidence": {"type": "array", "items": {"type": "string"}, "maxItems": 3},
+                    },
+                    "required": ["rank", "cause", "confidence", "subsystem", "evidence"],
+                },
+            },
+            "recommended_actions": {
+                "type": "array",
+                "maxItems": 4,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "priority": {"type": "string", "enum": ["immediate", "soon", "monitor"]},
+                        "action": {"type": "string"},
+                        "rationale": {"type": "string"},
+                    },
+                    "required": ["priority", "action", "rationale"],
+                },
+            },
+            "requires_human_approval": {"type": "boolean"},
+            "risk_level": {"type": "string", "enum": ["critical", "high", "medium", "low"]},
+            "estimated_resolution_time": {"type": "string"},
+        },
+        "required": [
+            "summary", "root_causes", "recommended_actions",
+            "requires_human_approval", "risk_level", "estimated_resolution_time",
+        ],
+    },
+}
+
+_MAX_FINDINGS_PER_RCA = 8
+_RCA_MAX_TOKENS = 2048
+
+
+def _condense_findings(findings: list[DiagnosticFinding]) -> list[tuple[DiagnosticFinding, int]]:
+    """
+    Latest finding per title with its occurrence count, newest first, at most
+    _MAX_FINDINGS_PER_RCA. Keeps the request size bounded however long a robot
+    has been reporting the same problem.
+    """
+    latest: dict[str, DiagnosticFinding] = {}
+    counts: dict[str, int] = {}
+    for f in findings:
+        latest.pop(f.title, None)
+        latest[f.title] = f
+        counts[f.title] = counts.get(f.title, 0) + 1
+    newest_first = list(reversed(latest.values()))[:_MAX_FINDINGS_PER_RCA]
+    return [(f, counts[f.title]) for f in newest_first]
+
 
 
 def _mock_rca(robot_id: str, findings: list) -> dict:
@@ -160,16 +209,17 @@ async def run_rca(
     if not _check_spend_guard():
         return {"error": "daily_cap_reached", "robot_id": robot_id}
 
+    condensed = _condense_findings(findings)
     findings_payload = [
         {
-            "finding_id": f.finding_id,
             "severity": f.severity.value,
             "title": f.title,
+            "occurrences": n,
             "explanation": f.explanation,
-            "evidence": f.evidence,
+            "evidence": f.evidence[:5],
             "recommended_actions": f.recommended_actions,
         }
-        for f in findings
+        for f, n in condensed
     ]
 
     # Last 10 events as context — most recent first
@@ -177,7 +227,7 @@ async def run_rca(
         {
             "event_type": e.event_type,
             "subsystem": e.subsystem,
-            "message": e.message,
+            "message": e.message[:300],
             "severity": e.severity.value,
             "metrics": e.metrics,
             "timestamp": e.timestamp.isoformat(),
@@ -192,59 +242,48 @@ async def run_rca(
         "recent_telemetry_context": events_payload,
     }, indent=2)
 
-    # Remove this block once API credits are confirmed
-    if not _client.api_key or False:  # flip to False when credits clear
-        mock = {
-            "summary": f"Robot {robot_id} has {len(findings)} active finding(s) requiring attention.",
-            "root_causes": [{"rank": 1, "cause": findings[0].title, "confidence": "high",
-                "subsystem": "power", "evidence": [e for e in findings[0].evidence]}],
-            "recommended_actions": [{"priority": "immediate",
-                "action": a, "rationale": "Diagnostic rule triggered."} 
-                for a in findings[0].recommended_actions[:2]],
-            "requires_human_approval": True,
-            "risk_level": findings[0].severity.value if findings[0].severity.value != "warning" else "high",
-            "estimated_resolution_time": "10 minutes",
-        }
-        mock["rca_id"] = str(__import__("uuid").uuid4())
-        mock["robot_id"] = robot_id
-        mock["timestamp"] = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
-        mock["findings_analyzed"] = len(findings)
-        mock["input_tokens"] = 0
-        mock["output_tokens"] = 0
-        logger.info("MOCK RCA for %s — risk=%s findings=%d", robot_id, mock["risk_level"], len(findings))
-        return mock
+    if not _client.api_key:
+        logger.warning("RCA enabled but ANTHROPIC_API_KEY is not set. Using mock.")
+        return _mock_rca(robot_id, findings)
 
     try:
         response = await _client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=1024,
+            max_tokens=_RCA_MAX_TOKENS,
             system=SYSTEM_PROMPT,
+            tools=[RCA_TOOL],
+            tool_choice={"type": "tool", "name": "report_rca"},
             messages=[{"role": "user", "content": user_message}],
         )
-
-        raw = response.content[0].text.strip()
-        # Strip markdown fences if model adds them despite instructions
-        if raw.startswith("```"):
-            raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-
-        rca = json.loads(raw)
-        rca["rca_id"] = str(uuid4())
-        rca["robot_id"] = robot_id
-        rca["timestamp"] = datetime.now(timezone.utc).isoformat()
-        rca["findings_analyzed"] = len(findings)
-        rca["input_tokens"] = response.usage.input_tokens
-        rca["output_tokens"] = response.usage.output_tokens
-
-        logger.info(
-            "RCA complete for %s — risk=%s findings=%d tokens=%d+%d",
-            robot_id, rca.get("risk_level", "?"), len(findings),
-            response.usage.input_tokens, response.usage.output_tokens,
-        )
-        return rca
-
-    except json.JSONDecodeError as exc:
-        logger.error("RCA JSON parse error: %s\nRaw: %s", exc, raw[:300])
-        return {"error": "RCA response parse failed", "robot_id": robot_id}
     except Exception as exc:
         logger.exception("RCA failed for %s: %s", robot_id, exc)
         return {"error": str(exc), "robot_id": robot_id}
+
+    usage = response.usage
+    if response.stop_reason == "max_tokens":
+        logger.error(
+            "RCA for %s hit the %d-token output limit; result discarded (tokens=%d+%d).",
+            robot_id, _RCA_MAX_TOKENS, usage.input_tokens, usage.output_tokens,
+        )
+        return {"error": "rca_truncated", "robot_id": robot_id}
+
+    tool_use = next((b for b in response.content if b.type == "tool_use"), None)
+    if tool_use is None or not isinstance(tool_use.input, dict):
+        logger.error("RCA for %s returned no report_rca call (stop=%s).",
+                     robot_id, response.stop_reason)
+        return {"error": "rca_no_tool_call", "robot_id": robot_id}
+
+    rca = dict(tool_use.input)
+    rca["rca_id"] = str(uuid4())
+    rca["robot_id"] = robot_id
+    rca["timestamp"] = datetime.now(timezone.utc).isoformat()
+    rca["findings_analyzed"] = len(condensed)
+    rca["input_tokens"] = usage.input_tokens
+    rca["output_tokens"] = usage.output_tokens
+
+    logger.warning(
+        "RCA complete for %s — risk=%s findings=%d tokens=%d+%d",
+        robot_id, rca.get("risk_level", "?"), len(condensed),
+        usage.input_tokens, usage.output_tokens,
+    )
+    return rca
