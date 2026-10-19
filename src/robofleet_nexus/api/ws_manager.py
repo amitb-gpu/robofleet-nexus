@@ -34,6 +34,11 @@ class ConnectionManager:
         self._active: list[WebSocket] = []
         self._replay_buffer: Deque[dict[str, Any]] = deque(maxlen=_REPLAY_BUFFER_SIZE)
         self._lock = asyncio.Lock()
+        # State a newly connected dashboard needs regardless of how old it is.
+        # GPU snapshots arrive every few seconds, so only the latest is kept here
+        # instead of letting them push everything else out of the replay buffer.
+        self._latest_gpu: dict[str, Any] | None = None
+        self._latest_by_robot: dict[tuple[str, str], dict[str, Any]] = {}
 
     # ------------------------------------------------------------------
     # Connection lifecycle
@@ -44,8 +49,11 @@ class ConnectionManager:
         async with self._lock:
             self._active.append(websocket)
 
-        # Replay recent events so the dashboard is instantly populated
-        for event in list(self._replay_buffer):
+        # Replay current state, then recent events, so the dashboard is instantly populated
+        sticky = list(self._latest_by_robot.values())
+        if self._latest_gpu is not None:
+            sticky.append(self._latest_gpu)
+        for event in list(self._replay_buffer) + sticky:
             try:
                 await websocket.send_text(json.dumps(event))
             except Exception:
@@ -76,7 +84,15 @@ class ConnectionManager:
         """
         # Stamp and buffer
         event.setdefault("ts", datetime.now(timezone.utc).isoformat())
-        self._replay_buffer.append(event)
+        event_type = event.get("type")
+        if event_type == "gpu_snapshot":
+            self._latest_gpu = event
+        elif event_type in ("diagnostic", "rca_result"):
+            robot_id = event.get("robot_id") or (event.get("rca") or {}).get("robot_id", "")
+            # Latest-only: replaying an older one after it would overwrite current state.
+            self._latest_by_robot[(event_type, str(robot_id))] = event
+        else:
+            self._replay_buffer.append(event)
 
         message = json.dumps(event)
         dead: list[WebSocket] = []

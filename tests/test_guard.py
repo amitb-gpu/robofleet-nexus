@@ -417,3 +417,17 @@ def test_fake_arm_logs_first_clamp_of_each_run() -> None:
     assert t.on_status(clamp(90, "elbow")) == ("clamp", "GUARD CLAMP: elbow")
     assert t.on_status(clamp(91, "elbow")) is None
     assert t.on_status(clamp(180, "wrist_1")) == ("clamp", "GUARD CLAMP: wrist_1")
+
+
+def test_guard_halt_reaches_dashboard_state() -> None:
+    """A guard halt produces a findings push and an RCA that survive for late dashboards."""
+    from robofleet_nexus.api.main import app
+    from robofleet_nexus.api.ws_manager import manager
+
+    guard = ActionGuard(make_envelope(robot_id="arm_dash"))
+    decision = guard.check([math.nan, 0.0], observation=[0.0, 0.0])
+    TestClient(app).post("/telemetry", json=decision_to_event(decision, source="mock"))
+
+    diag = manager._latest_by_robot[("diagnostic", "arm_dash")]
+    assert diag["findings"][0]["title"] == "Policy halted by safety guard"
+    assert ("rca_result", "arm_dash") in manager._latest_by_robot

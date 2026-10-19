@@ -151,6 +151,9 @@ main{padding:20px;display:flex;flex-direction:column;gap:20px}
 .ev-type.audit{color:var(--green)}
 .ev-type.ros2_event{color:#f472b6}
 .ev-type.error{color:var(--red)}
+.ev-type.guard-halt{color:var(--red);font-weight:500}
+.ev-type.guard-clamp{color:var(--amber)}
+.ev-type.guard-warning{color:var(--amber)}
 .ev-msg{color:var(--text);opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ── Diagnostic findings ─────────────────────────────────────────── */
@@ -159,7 +162,9 @@ main{padding:20px;display:flex;flex-direction:column;gap:20px}
   background:var(--bg3);border-left:3px solid var(--muted);
   border-radius:0 4px 4px 0;padding:8px 10px;font-size:12px;
 }
-.finding.ERROR{border-left-color:var(--red)}
+.finding.ERROR,.finding.critical{border-left-color:var(--red)}
+.finding.warning{border-left-color:var(--amber)}
+.finding-why{font-size:11px;color:var(--muted);margin:2px 0 3px}
 .finding.WARNING{border-left-color:var(--amber)}
 .finding.INFO{border-left-color:var(--accent)}
 .finding-title{font-weight:500;margin-bottom:2px}
@@ -376,14 +381,23 @@ function dispatch(msg) {
     case 'rca_result':      handleRca(msg);          break;
   }
 
+  // Findings have their own panel; listing every refresh in the stream is noise.
+  if (msg.type === 'diagnostic') return;
   const ts = (msg.ts || new Date().toISOString()).slice(11, 19);
-  addEvent(msg.type, eventSummary(msg), ts);
+  addEvent(eventLabel(msg), eventSummary(msg), ts);
+}
+
+function eventLabel(msg) {
+  if (msg.type === 'telemetry' && msg.data?.event_type === 'guard_intervention') {
+    return `guard-${msg.data.metadata?.verdict === 'pass' ? 'warning' : msg.data.metadata?.verdict || 'clamp'}`;
+  }
+  return msg.type;
 }
 
 function eventSummary(msg) {
   switch (msg.type) {
     case 'gpu_snapshot': return `${msg.gpus?.length ?? 0} GPU(s) reported`;
-    case 'telemetry':    return `${msg.robot_id}: ${JSON.stringify(msg.data).slice(0, 60)}`;
+    case 'telemetry':    return `${msg.robot_id}: ${msg.data?.message ?? JSON.stringify(msg.data).slice(0, 60)}`;
     case 'diagnostic':   return `${msg.robot_id}: ${msg.findings?.length ?? 0} finding(s)`;
     case 'sim_job':      return `job ${msg.job?.job_id ?? ''} → ${msg.job?.status ?? ''}`;
     case 'audit':        return `${msg.entry?.action ?? ''} ${msg.entry?.detail ?? ''}`;
@@ -553,7 +567,8 @@ function renderFindings() {
 
   html += all.map(f => `
     <div class="finding ${f.severity || 'INFO'}">
-      <div class="finding-title">${f.title || f.message || '(no message)'}</div>
+      <div class="finding-title">${escHtml(f.title || f.message || '(no message)')}</div>
+      ${f.evidence?.length > 1 ? `<div class="finding-why">${escHtml(f.evidence[1])}</div>` : ''}
       <div class="finding-meta">${f.robot_id} · ${f.severity || 'INFO'} · ${(f.ts || '').slice(11,19) || 'now'}</div>
     </div>`).join('');
 
@@ -629,7 +644,7 @@ function addEvent(type, msg, ts) {
   row.className = 'event-row';
   row.innerHTML = `
     <span class="ev-ts">${ts || new Date().toISOString().slice(11,19)}</span>
-    <span class="ev-type ${type}">${type}</span>
+    <span class="ev-type ${type}">${type.startsWith('guard-') ? type.slice(6).toUpperCase() : type}</span>
     <span class="ev-msg">${escHtml(msg)}</span>`;
 
   stream.prepend(row);

@@ -25,6 +25,8 @@ from fastapi.responses import HTMLResponse
 
 from robofleet_nexus.api.ws_manager import manager
 from robofleet_nexus.core.gpu_monitor import gpu_poll_loop
+from robofleet_nexus.diagnostics.rules import evaluate_event
+from robofleet_nexus.telemetry.schemas import RobotEvent
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +116,32 @@ async def on_telemetry_ingested(robot_id: str, payload: dict) -> None:
         await on_telemetry_ingested(telemetry.robot_id, telemetry.dict())
     """
     await manager.emit_telemetry(robot_id, payload)
+    await _push_findings(robot_id, payload)
+
+
+# Most recent finding per title, per robot, for the dashboard's findings panel.
+_MAX_FINDINGS_PER_ROBOT = 8
+_recent_findings: dict[str, dict[str, dict]] = {}
+
+
+async def _push_findings(robot_id: str, payload: dict) -> None:
+    """Evaluate diagnostics for an ingested event and push the robot's findings."""
+    try:
+        event = RobotEvent.model_validate(payload)
+    except Exception:  # noqa: BLE001 - malformed payloads are already rejected upstream
+        return
+    findings = evaluate_event(event)
+    if not findings:
+        return
+    recent = _recent_findings.setdefault(robot_id, {})
+    for f in findings:
+        entry = f.model_dump(mode="json")
+        entry["ts"] = event.timestamp.isoformat()
+        recent.pop(f.title, None)  # re-insert so the newest is last
+        recent[f.title] = entry
+    while len(recent) > _MAX_FINDINGS_PER_ROBOT:
+        recent.pop(next(iter(recent)))
+    await manager.emit_diagnostic(robot_id, list(reversed(recent.values())))
 
 
 async def on_diagnostic_findings(robot_id: str, findings: list[dict]) -> None:
