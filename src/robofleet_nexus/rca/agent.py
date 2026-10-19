@@ -80,6 +80,34 @@ Prioritise safety — if there is any risk of hardware damage or injury, say so 
 """
 
 
+def _mock_rca(robot_id: str, findings: list) -> dict:
+    """Deterministic mock RCA — zero API cost. Used when RCA is disabled."""
+    import uuid
+    from datetime import datetime, timezone
+    if not findings:
+        return {}
+    f0 = findings[0]
+    risk = f0.severity.value if f0.severity.value != "warning" else "high"
+    return {
+        "summary": f"Robot {robot_id} has {len(findings)} active finding(s) requiring attention.",
+        "root_causes": [{"rank": 1, "cause": f0.title, "confidence": "high",
+            "subsystem": "power", "evidence": list(f0.evidence)}],
+        "recommended_actions": [{"priority": "immediate", "action": a,
+            "rationale": "Diagnostic rule triggered."}
+            for a in f0.recommended_actions[:2]],
+        "requires_human_approval": True,
+        "risk_level": risk,
+        "estimated_resolution_time": "10 minutes",
+        "rca_id": str(uuid.uuid4()),
+        "robot_id": robot_id,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "findings_analyzed": len(findings),
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "mock": True,
+    }
+
+
 async def run_rca(
     robot_id: str,
     findings: list[DiagnosticFinding],
@@ -92,6 +120,10 @@ async def run_rca(
     if not findings:
         return {}
 
+    import os
+    if os.environ.get("ROBOFLEET_RCA_ENABLED", "0") != "1":
+        logger.info("RCA disabled (set ROBOFLEET_RCA_ENABLED=1 to enable). Using mock.")
+        return _mock_rca(robot_id, findings)
     if not _check_spend_guard():
         return {"error": "daily_cap_reached", "robot_id": robot_id}
 

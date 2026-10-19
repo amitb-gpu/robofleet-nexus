@@ -8,7 +8,7 @@ from robofleet_nexus.isaac.profiles import SimulationProfile, list_simulation_pr
 from robofleet_nexus.audit.hash_chain import HashChainAuditLog
 from robofleet_nexus.diagnostics.rules import evaluate_event
 from robofleet_nexus.telemetry.schemas import DiagnosticFinding, RobotEvent
-from robofleet_nexus.api.ws_routes import ws_router, lifespan, on_telemetry_ingested
+from robofleet_nexus.api.ws_routes import ws_router, lifespan, on_telemetry_ingested, on_audit_event, on_sim_job_update
 from robofleet_nexus.api.ws_manager import manager as ws_manager
 from robofleet_nexus.rca.agent import run_rca
 from robofleet_nexus.lerobot.episode_buffer import episode_buffer
@@ -58,6 +58,8 @@ async def ingest_telemetry(
         actor="api",
         payload=event.model_dump(mode="json"),
     )
+    await on_audit_event({"action": "telemetry.ingested",
+                          "detail": f"{event.robot_id} · {event.event_type}"})
 
     # Feed LeRobot episode buffer
     episode_buffer.ingest(event)
@@ -107,6 +109,13 @@ async def trigger_rca(robot_id: str, background_tasks: BackgroundTasks) -> dict:
         return {"status": "no_findings", "robot_id": robot_id}
     background_tasks.add_task(_run_and_broadcast_rca, robot_id, robot_findings)
     return {"status": "rca_triggered", "robot_id": robot_id, "findings": len(robot_findings)}
+
+
+@app.post("/demo/sim-job")
+async def demo_sim_job(job: dict) -> dict:
+    """Demo-only: broadcast a simulation job to the dashboard."""
+    await on_sim_job_update(job)
+    return {"status": "ok"}
 
 
 @app.get("/audit")
