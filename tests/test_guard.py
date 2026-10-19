@@ -368,3 +368,40 @@ def test_fake_arm_schedule_through_guard(tmp_path: Path) -> None:
     assert kinds.get("non_finite_action") == 1
     assert "clamp_escalation" not in kinds
     assert guard.stats.resets == 2
+
+
+def test_fake_arm_ignores_status_published_before_reset() -> None:
+    from robofleet_nexus.adapters.ros2_fake_arm import GuardStatusTracker
+
+    t = GuardStatusTracker()
+    halt = {"verdict": "halt", "latched": True, "resets": 0, "step": 10,
+            "violations": ["observation is 9.8 std devs from training data on wrist_3"]}
+    held = {"verdict": "halt", "latched": True, "resets": 0, "step": 11,
+            "violations": ["guard halted earlier (observation_ood); awaiting operator reset"]}
+
+    event = t.on_status(halt)
+    assert event is not None and event[0] == "error"
+    assert event[1].startswith("GUARD HALT: observation is 9.8 std devs")
+    assert t.on_status(held) is None and t.paused
+    assert t.on_reset("demo-operator") is not None and not t.paused
+
+    # A latched status from before the reset arrives late: ignored.
+    assert t.on_status(held) is None and not t.paused
+    # A genuinely new halt after the reset is reported.
+    nan_halt = {"verdict": "halt", "latched": True, "resets": 1, "step": 40,
+                "violations": ["policy returned NaN/inf for wrist_2"]}
+    assert t.on_status(nan_halt) is not None and t.paused
+
+
+def test_fake_arm_logs_first_clamp_of_each_run() -> None:
+    from robofleet_nexus.adapters.ros2_fake_arm import GuardStatusTracker
+
+    t = GuardStatusTracker()
+
+    def clamp(step: int, why: str) -> dict[str, object]:
+        return {"verdict": "clamp", "latched": False, "resets": 0, "step": step,
+                "violations": [why]}
+
+    assert t.on_status(clamp(90, "elbow")) == ("warning", "GUARD CLAMP: elbow")
+    assert t.on_status(clamp(91, "elbow")) is None
+    assert t.on_status(clamp(180, "wrist_1")) == ("warning", "GUARD CLAMP: wrist_1")

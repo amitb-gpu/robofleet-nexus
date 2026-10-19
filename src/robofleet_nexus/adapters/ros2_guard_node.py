@@ -183,6 +183,10 @@ def run_guard_node(args: argparse.Namespace) -> None:
                     "step": decision.step,
                     "verdict": decision.verdict.value,
                     "latched": decision.latched,
+                    "latched_reason": guard.latched_reason,
+                    # Lets subscribers discard status messages that were published
+                    # before the most recent operator reset.
+                    "resets": guard.stats.resets,
                     "violations": [v.detail for v in decision.violations],
                 }
             )

@@ -78,6 +78,47 @@ def encoder_slip(step: int) -> float:
     return 1.2 if step % CYCLE_STEPS in SLIP_STEPS else 0.0
 
 
+class GuardStatusTracker:
+    """
+    Tracks the guard's state from /guard/status and /guard/reset for the fake policy.
+
+    The guard publishes a status on every held step while latched, so a status
+    published just before a reset can arrive just after it. Each status carries
+    the guard's reset count; anything older than the resets seen here is stale.
+    """
+
+    def __init__(self) -> None:
+        self.paused = False
+        self.resets_seen = 0
+        self._last_clamp_step = -2
+
+    def on_status(self, status: dict[str, Any]) -> tuple[str, str] | None:
+        """Update state; return (level, message) to log, or None."""
+        if int(status.get("resets", 0)) < self.resets_seen:
+            return None
+        verdict = status.get("verdict", "")
+        reason = (status.get("violations") or ["?"])[0]
+        if status.get("latched"):
+            if self.paused:
+                return None
+            self.paused = True
+            return "error", f"GUARD HALT: {reason}; policy paused, holding position"
+        if verdict == "clamp":
+            step = int(status.get("step", 0))
+            first_of_run = step != self._last_clamp_step + 1
+            self._last_clamp_step = step
+            if first_of_run:
+                return "warning", f"GUARD CLAMP: {reason}"
+        return None
+
+    def on_reset(self, operator: str) -> str | None:
+        if not operator.strip():
+            return None
+        self.resets_seen += 1
+        was_paused, self.paused = self.paused, False
+        return f"Guard reset by '{operator}'; policy resuming" if was_paused else None
+
+
 def run_fake_arm(args: argparse.Namespace) -> None:
     try:
         import rclpy
@@ -94,9 +135,8 @@ def run_fake_arm(args: argparse.Namespace) -> None:
             self._state = nominal(0.0)
             self._step = 0
             self._policy_t = 0
-            self._paused = False
+            self._tracker = GuardStatusTracker()
             self._halted_at: float | None = None
-            self._last_verdict = "pass"
 
             self._state_pub = self.create_publisher(JointState, args.state_topic, 10)
             self._policy_pub = self.create_publisher(JointState, args.policy_topic, 10)
@@ -141,7 +181,7 @@ def run_fake_arm(args: argparse.Namespace) -> None:
             self._policy_pub.publish(out)
 
             self._step += 1
-            if not self._paused:
+            if not self._tracker.paused:
                 self._policy_t += 1
             self._maybe_auto_reset()
 
@@ -151,23 +191,21 @@ def run_fake_arm(args: argparse.Namespace) -> None:
                 status = json.loads(msg.data)
             except json.JSONDecodeError:
                 return
-            verdict = status.get("verdict", "")
-            if status.get("latched") and not self._paused:
-                self._paused = True
+            event = self._tracker.on_status(status)
+            if event is None:
+                return
+            level, text = event
+            if level == "error":
                 self._halted_at = time.monotonic()
-                reason = (status.get("violations") or ["?"])[0]
-                self.get_logger().error(f"GUARD HALT: {reason}; policy paused, holding position")
-            elif verdict == "clamp" and self._last_verdict != "clamp":
-                reason = (status.get("violations") or ["?"])[0]
-                self.get_logger().warning(f"GUARD CLAMP: {reason}")
-            self._last_verdict = verdict
+                self.get_logger().error(text)
+            else:
+                self.get_logger().warning(text)
 
         def _on_reset(self, msg: Any) -> None:
-            if self._paused:
-                self.get_logger().info(f"Guard reset by '{msg.data}'; policy resuming")
-            self._paused = False
+            text = self._tracker.on_reset(str(msg.data))
             self._halted_at = None
-            self._last_verdict = "pass"
+            if text:
+                self.get_logger().info(text)
 
         def _maybe_auto_reset(self) -> None:
             if args.auto_reset <= 0 or self._halted_at is None:
