@@ -28,14 +28,23 @@ import logging
 import math
 import random
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any, TypedDict
 
 import httpx
 
 logger = logging.getLogger("robofleet.demo_fleet")
 
 # ── Fleet definition ───────────────────────────────────────────────────────────
-FLEET = [
+class Robot(TypedDict):
+    id: str
+    mission: str
+    zone: str
+    battery: float
+    phase: float
+
+
+FLEET: list[Robot] = [
     {"id": "patrol_01",    "mission": "perimeter patrol",    "zone": "sector-A", "battery": 87.0, "phase": 0.0},
     {"id": "inspect_02",   "mission": "infra inspection",    "zone": "bridge-7", "battery": 28.0, "phase": 1.2},
     {"id": "transport_03", "mission": "supply transport",    "zone": "depot-2",  "battery": 92.0, "phase": 2.4},
@@ -45,7 +54,7 @@ FLEET = [
 
 JOINT_NAMES = ["base", "shoulder", "elbow", "wrist_1", "wrist_2", "gripper"]
 
-SIM_JOBS = [
+SIM_JOBS: list[dict[str, Any]] = [
     {"job_id": "sim-nav-001",    "name": "Warehouse Nav Training",   "environment": "isaac_warehouse", "vram_required_mb": 8000,  "status": "RUNNING"},
     {"job_id": "sim-grasp-002",  "name": "Grasp Policy SFT",         "environment": "isaac_lab",       "vram_required_mb": 14000, "status": "QUEUED"},
     {"job_id": "sim-terrain-003","name": "Rough Terrain Locomotion", "environment": "isaac_lab",       "vram_required_mb": 16000, "status": "QUEUED"},
@@ -53,7 +62,16 @@ SIM_JOBS = [
 ]
 
 
-def _make_event(robot_id, source, event_type, subsystem, message, metrics=None, metadata=None, severity="info"):
+def _make_event(
+    robot_id: str,
+    source: str,
+    event_type: str,
+    subsystem: str,
+    message: str,
+    metrics: dict[str, float] | None = None,
+    metadata: dict[str, Any] | None = None,
+    severity: str = "info",
+) -> dict[str, Any]:
     return {
         "event_id": str(uuid.uuid4()),
         "robot_id": robot_id,
@@ -67,10 +85,10 @@ def _make_event(robot_id, source, event_type, subsystem, message, metrics=None, 
     }
 
 
-async def _post(client, path, payload):
+async def _post(client: httpx.AsyncClient, path: str, payload: dict[str, Any]) -> None:
     try:
         await client.post(path, content=json.dumps(payload))
-    except Exception as exc:
+    except httpx.HTTPError as exc:
         logger.debug("post error: %s", exc)
 
 
@@ -84,7 +102,7 @@ async def run_demo_fleet(nexus_url: str, fault_robot: str | None = None) -> None
 
         # Seed the simulation job queue once
         for job in SIM_JOBS:
-            await _post(client, "/demo/sim-job", {**job, "ts": datetime.now(timezone.utc).isoformat()})
+            await _post(client, "/demo/sim-job", {**job, "ts": datetime.now(UTC).isoformat()})
         logger.info("Fleet online. Ctrl+C to stop.")
 
         while True:
@@ -100,7 +118,7 @@ async def run_demo_fleet(nexus_url: str, fault_robot: str | None = None) -> None
                 phase = robot["phase"] + tick * 0.04
 
                 # Joint state event
-                metrics = {}
+                metrics: dict[str, float] = {}
                 for i, jn in enumerate(JOINT_NAMES):
                     metrics[f"{jn}.pos"] = round(math.sin(phase + i * 0.7) * 1.4, 4)
                     metrics[f"{jn}.vel"] = round(math.cos(phase + i * 0.7) * 0.25, 4)

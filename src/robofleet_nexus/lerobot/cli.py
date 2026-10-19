@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -31,7 +31,7 @@ def cmd_export(
     robot_id: str = typer.Option(..., "--robot-id", help="Robot ID to export episodes for"),
     task: str = typer.Option("unspecified", "--task", help="Task label"),
     fps: float = typer.Option(10.0, "--fps", help="Nominal recording FPS"),
-    output: Optional[str] = typer.Option(None, "--output", help="Output directory"),
+    output: str | None = typer.Option(None, "--output", help="Output directory"),
     include_open: bool = typer.Option(False, "--include-open", help="Export the current open episode too"),
     nexus_url: str = typer.Option("http://localhost:8000", "--nexus-url"),
 ) -> None:
@@ -134,7 +134,7 @@ def cmd_inspect(
         console.print(f"  Frames:   {len(df)}")
         console.print(f"  Columns:  {list(df.columns)}")
         console.print(f"  Duration: {df['timestamp'].max():.2f}s")
-        console.print(f"\n  First frame:")
+        console.print("\n  First frame:")
         first = df.iloc[0]
         console.print(f"    action:             {first['action']}")
         console.print(f"    observation.state:  {first['observation.state']}")
@@ -177,8 +177,8 @@ def cmd_list(
     console.print(table)
 
 
-def _print_export_summary(summary: dict) -> None:
-    console.print(f"\n[bold green]Export complete![/bold green]")
+def _print_export_summary(summary: dict[str, Any]) -> None:
+    console.print("\n[bold green]Export complete![/bold green]")
     console.print(f"  Robot ID:       {summary.get('robot_id', '?')}")
     console.print(f"  Total episodes: {summary.get('total_episodes', '?')}")
     console.print(f"  Total frames:   {summary.get('total_frames', '?')}")
@@ -186,7 +186,7 @@ def _print_export_summary(summary: dict) -> None:
 
     episodes = summary.get("episodes", [])
     if episodes:
-        console.print(f"\n  Episodes:")
+        console.print("\n  Episodes:")
         for ep in episodes:
             console.print(
                 f"    [{ep.get('episode_index', '?')}] "

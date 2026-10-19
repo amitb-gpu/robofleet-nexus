@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 from robofleet_nexus.lerobot.schema import LeRobotEpisode, LeRobotFrame

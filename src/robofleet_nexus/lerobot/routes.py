@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -27,7 +28,7 @@ logger = logging.getLogger("robofleet.lerobot.routes")
 dataset_router = APIRouter(prefix="/dataset", tags=["dataset"])
 
 # Track all export output dirs this session
-_export_history: list[dict] = []
+_export_history: list[dict[str, Any]] = []
 
 DEFAULT_EXPORT_ROOT = Path.home() / "robofleet_datasets"
 
@@ -41,7 +42,7 @@ class ExportRequest(BaseModel):
 
 
 @dataset_router.get("/buffer")
-def buffer_stats() -> dict:
+def buffer_stats() -> dict[str, Any]:
     """Return episode buffer statistics for all robots."""
     robot_ids = episode_buffer.all_robot_ids()
     if not robot_ids:
@@ -52,7 +53,7 @@ def buffer_stats() -> dict:
 
 
 @dataset_router.post("/export")
-def export_episodes(req: ExportRequest) -> dict:
+def export_episodes(req: ExportRequest) -> dict[str, Any]:
     """
     Flush completed episodes for a robot and write a LeRobot v3 dataset.
 
@@ -102,6 +103,6 @@ def export_episodes(req: ExportRequest) -> dict:
 
 
 @dataset_router.get("/exports")
-def list_exports() -> dict:
+def list_exports() -> dict[str, Any]:
     """Return all dataset exports created this session."""
     return {"exports": _export_history, "count": len(_export_history)}

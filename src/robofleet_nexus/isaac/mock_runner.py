@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 def main() -> None:
@@ -14,7 +14,7 @@ def main() -> None:
         "job_id": args.job_id,
         "backend": "mock",
         "status": "completed",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "note": "Mock simulation completed without launching Isaac Sim.",
     }
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Literal
 
@@ -17,7 +17,7 @@ class RobotEvent(BaseModel):
     event_id: str
     robot_id: str
     source: Literal["ros2", "isaac_sim", "isaac_lab", "manual", "mock"]
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     severity: RobotSeverity = RobotSeverity.info
     event_type: str
     subsystem: str

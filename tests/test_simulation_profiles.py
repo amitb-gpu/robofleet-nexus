@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 
 from robofleet_nexus.api.main import app
 
-
 client = TestClient(app)
 
 

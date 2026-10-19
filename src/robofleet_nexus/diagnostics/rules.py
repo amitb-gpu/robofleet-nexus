@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from uuid import uuid4
+
 from robofleet_nexus.telemetry.schemas import DiagnosticFinding, RobotEvent, RobotSeverity
 
 

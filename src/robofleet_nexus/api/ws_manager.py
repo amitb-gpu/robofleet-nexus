@@ -11,8 +11,8 @@ import asyncio
 import json
 import logging
 from collections import deque
-from datetime import datetime, timezone
-from typing import Any, Deque
+from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -32,7 +32,7 @@ class ConnectionManager:
 
     def __init__(self) -> None:
         self._active: list[WebSocket] = []
-        self._replay_buffer: Deque[dict[str, Any]] = deque(maxlen=_REPLAY_BUFFER_SIZE)
+        self._replay_buffer: deque[dict[str, Any]] = deque(maxlen=_REPLAY_BUFFER_SIZE)
         self._lock = asyncio.Lock()
         # State a newly connected dashboard needs regardless of how old it is.
         # GPU snapshots arrive every few seconds, so only the latest is kept here
@@ -83,7 +83,7 @@ class ConnectionManager:
         Stale/disconnected clients are pruned automatically.
         """
         # Stamp and buffer
-        event.setdefault("ts", datetime.now(timezone.utc).isoformat())
+        event.setdefault("ts", datetime.now(UTC).isoformat())
         event_type = event.get("type")
         if event_type == "gpu_snapshot":
             self._latest_gpu = event

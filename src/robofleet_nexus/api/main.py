@@ -1,18 +1,25 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, BackgroundTasks
-from robofleet_nexus.gpu.inventory import GpuInventory, detect_nvidia_gpus
-from robofleet_nexus.isaac.job_spec import IsaacSimulationJob, SimulationPlan
-from robofleet_nexus.isaac.scheduler import plan_simulation_job
-from robofleet_nexus.isaac.profiles import SimulationProfile, list_simulation_profiles
+from fastapi import BackgroundTasks, FastAPI
+
+from robofleet_nexus.api.ws_manager import manager as ws_manager
+from robofleet_nexus.api.ws_routes import (
+    lifespan,
+    on_audit_event,
+    on_sim_job_update,
+    on_telemetry_ingested,
+    ws_router,
+)
 from robofleet_nexus.audit.hash_chain import HashChainAuditLog
 from robofleet_nexus.diagnostics.rules import evaluate_event
-from robofleet_nexus.telemetry.schemas import DiagnosticFinding, RobotEvent
-from robofleet_nexus.api.ws_routes import ws_router, lifespan, on_telemetry_ingested, on_audit_event, on_sim_job_update
-from robofleet_nexus.api.ws_manager import manager as ws_manager
-from robofleet_nexus.rca.agent import run_rca
+from robofleet_nexus.gpu.inventory import GpuInventory, detect_nvidia_gpus
+from robofleet_nexus.isaac.job_spec import IsaacSimulationJob, SimulationPlan
+from robofleet_nexus.isaac.profiles import SimulationProfile, list_simulation_profiles
+from robofleet_nexus.isaac.scheduler import plan_simulation_job
 from robofleet_nexus.lerobot.episode_buffer import episode_buffer
 from robofleet_nexus.lerobot.routes import dataset_router
+from robofleet_nexus.rca.agent import run_rca
+from robofleet_nexus.telemetry.schemas import DiagnosticFinding, RobotEvent
 
 app = FastAPI(
     lifespan=lifespan,

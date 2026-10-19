@@ -19,7 +19,7 @@ import logging
 import math
 import sys
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
@@ -34,8 +34,8 @@ def _make_event(
     event_type: str,
     subsystem: str,
     message: str,
-    metrics: Optional[dict[str, float]] = None,
-    metadata: Optional[dict[str, Any]] = None,
+    metrics: dict[str, float] | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "event_id": str(uuid.uuid4()),
@@ -110,9 +110,9 @@ def _odom_to_event(robot_id: str, msg: Any) -> dict[str, Any]:
 class NexusClient:
     def __init__(self, base_url: str) -> None:
         self.base_url = base_url.rstrip("/")
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
-    async def __aenter__(self) -> "NexusClient":
+    async def __aenter__(self) -> NexusClient:
         self._client = httpx.AsyncClient(
             base_url=self.base_url, timeout=5.0,
             headers={"Content-Type": "application/json"},
@@ -187,13 +187,13 @@ async def _mock_publish_loop(nexus_url: str, robot_id: str) -> None:
 # ── Real ROS2 bridge ──────────────────────────────────────────────────────────
 
 def build_ros2_bridge(robot_id: str, nexus_url: str,
-                      topics: Optional[list[str]] = None) -> None:
+                      topics: list[str] | None = None) -> None:
     try:
         import rclpy
-        from rclpy.node import Node
-        from sensor_msgs.msg import BatteryState, JointState
         from diagnostic_msgs.msg import DiagnosticArray
         from nav_msgs.msg import Odometry
+        from rclpy.node import Node
+        from sensor_msgs.msg import BatteryState, JointState
     except ImportError as exc:
         logger.error("rclpy not found: %s\nRun: source /opt/ros/humble/setup.bash", exc)
         sys.exit(1)

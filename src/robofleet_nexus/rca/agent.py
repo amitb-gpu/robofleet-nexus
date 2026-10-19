@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -168,7 +168,7 @@ def _condense_findings(findings: list[DiagnosticFinding]) -> list[tuple[Diagnost
 def _mock_rca(robot_id: str, findings: list) -> dict:
     """Deterministic mock RCA — zero API cost. Used when RCA is disabled."""
     import uuid
-    from datetime import datetime, timezone
+    from datetime import datetime
     if not findings:
         return {}
     f0 = findings[0]
@@ -185,7 +185,7 @@ def _mock_rca(robot_id: str, findings: list) -> dict:
         "estimated_resolution_time": "10 minutes",
         "rca_id": str(uuid.uuid4()),
         "robot_id": robot_id,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "findings_analyzed": len(findings),
         "input_tokens": 0,
         "output_tokens": 0,
@@ -240,7 +240,7 @@ async def run_rca(
 
     user_message = json.dumps({
         "robot_id": robot_id,
-        "analysis_timestamp": datetime.now(timezone.utc).isoformat(),
+        "analysis_timestamp": datetime.now(UTC).isoformat(),
         "active_findings": findings_payload,
         "recent_telemetry_context": events_payload,
     }, indent=2)
@@ -279,7 +279,7 @@ async def run_rca(
     rca = dict(tool_use.input)
     rca["rca_id"] = str(uuid4())
     rca["robot_id"] = robot_id
-    rca["timestamp"] = datetime.now(timezone.utc).isoformat()
+    rca["timestamp"] = datetime.now(UTC).isoformat()
     rca["findings_analyzed"] = len(condensed)
     rca["input_tokens"] = usage.input_tokens
     rca["output_tokens"] = usage.output_tokens

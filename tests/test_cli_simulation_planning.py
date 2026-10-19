@@ -5,7 +5,6 @@ from typer.testing import CliRunner
 
 from robofleet_nexus.cli.main import app
 
-
 runner = CliRunner()
 
 

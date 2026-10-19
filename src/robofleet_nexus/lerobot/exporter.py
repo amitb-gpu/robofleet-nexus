@@ -30,6 +30,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import pyarrow as pa
@@ -159,7 +160,7 @@ def _write_episode_parquet(episode: LeRobotEpisode, path: Path) -> None:
     pq.write_table(table, path, compression="snappy")
 
 
-def export_summary(output_dir: Path | str) -> dict:
+def export_summary(output_dir: Path | str) -> dict[str, Any]:
     """
     Read back an exported dataset and return a summary dict.
     Useful for verifying the export and building the API response.

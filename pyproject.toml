@@ -26,16 +26,27 @@ dependencies = [
 dev = [
   "pytest",
   "pytest-cov",
-  "ruff",
-  "mypy",
-  "types-PyYAML"
+  "ruff==0.17.1",
+  "mypy==2.4.0",
+  "types-PyYAML",
+  "pandas-stubs"
 ]
 
 [project.scripts]
 robofleet = "robofleet_nexus.cli.main:app"
 
 [tool.ruff]
-line-length = 100
+line-length = 120
+
+[tool.ruff.lint]
+# Explicit rule set so CI results don't change when a new ruff release widens its defaults.
+select = ["E", "F", "W", "I", "UP"]
+# str+Enum is kept deliberately: StrEnum changes str() output that payloads rely on.
+ignore = ["UP042"]
+
+[tool.ruff.lint.per-file-ignores]
+# Aligned demo data tables read better unwrapped.
+"src/robofleet_nexus/adapters/demo_fleet.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.11"
