@@ -60,5 +60,7 @@ module = [
   "nav_msgs.*",
   "launch.*",
   "launch_testing.*",
+  "std_msgs.*",
+  "pyarrow.*",
 ]
 ignore_missing_imports = true

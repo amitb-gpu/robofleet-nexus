@@ -15,6 +15,50 @@ RoboFleet Nexus is a production-style robotics control plane that sits above rob
 
 ---
 
+## RoboFleet Guard: runtime safety for learned policies
+
+VLA and RL policies are probabilistic. They glitch, drift past joint limits, and act confidently on observations they were never trained on. RoboFleet Guard sits between the policy and the robot and checks every action before it is executed:
+
+```
+policy ──/policy/joint_command──▶ [ RoboFleet Guard ] ──/joint_command──▶ robot / Isaac Sim
+                                        │
+                                        └──▶ audit chain · diagnostics · AI RCA · dashboard
+```
+
+| Verdict | When | What reaches the robot |
+| ------- | ---- | ---------------------- |
+| **PASS** | Action is inside the envelope | The action, unchanged |
+| **CLAMP** | Joint target out of range, or the step is too fast | A corrected action inside the envelope |
+| **HALT** | NaN/inf output, effort or workspace breach, out-of-distribution observation, or persistent clamping | The last safe command (hold); latched until a named operator resets |
+
+- **Envelope from your data.** `robofleet guard fit-baseline` derives joint ranges, rate limits, and an observation baseline from the LeRobot v3 dataset the policy was trained on, including datasets RoboFleet Nexus exports from fleet telemetry.
+- **Out-of-distribution detection.** Each observation is scored against the training data; a slipped encoder or an unfamiliar scene halts the policy instead of letting it improvise.
+- **Evidence, not logs.** Every clamp, halt, and operator reset is written to the SHA-256 hash chain. `robofleet guard verify-audit` proves the record hasn't been edited.
+- **Never generates motion.** The guard only passes, narrows, or stops what the policy proposed.
+
+Try it without ROS2 or a GPU:
+
+```
+robofleet guard demo                       # 6-joint arm, 4 injected faults
+robofleet guard demo --post http://localhost:8000 --realtime   # stream to the dashboard
+robofleet guard verify-audit guard_demo/audit.jsonl
+```
+
+Run it in front of a real policy (ROS2 Jazzy):
+
+```
+robofleet guard fit-baseline ~/robofleet_datasets/bot_001/<export_dir> --out guard_config
+source /opt/ros/jazzy/setup.bash
+PYTHONPATH=src /usr/bin/python3 -m robofleet_nexus.adapters.ros2_guard_node \
+  --robot-id bot_001 --envelope guard_config/envelope.yaml --baseline guard_config/baseline.json
+# reset after a halt:
+ros2 topic pub --once /guard/reset std_msgs/String "{data: 'your-name'}"
+```
+
+Derived envelopes are a starting point to review, not a certified safety configuration. The guard is a software layer and does not replace hardware e-stops or a functional-safety controller.
+
+---
+
 ## Platform architecture
 
 ![RoboFleet Nexus architecture](docs/assets/robofleet_nexus_architecture.png)

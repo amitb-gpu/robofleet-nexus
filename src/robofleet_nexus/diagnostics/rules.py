@@ -94,4 +94,31 @@ def evaluate_event(event: RobotEvent) -> list[DiagnosticFinding]:
                  "Review recent motion commands for this joint."],
             ))
 
+    # ── Policy safety guard ───────────────────────────────────────────────
+    if event.event_type == "guard_intervention":
+        kinds = event.metadata.get("violation_kinds", [])
+        details = [v.get("detail", "") for v in event.metadata.get("violations", [])]
+        evidence = [f"violation_kinds={','.join(kinds)}"] + [d for d in details if d][:5]
+        if event.metrics.get("guard.halt", 0.0) >= 1.0:
+            findings.append(finding(
+                RobotSeverity.critical,
+                "Policy halted by safety guard",
+                "The runtime guard stopped the learned policy and is holding the last "
+                "safe command until an operator resets it.",
+                evidence,
+                ["Inspect the observation and policy output at the halted step.",
+                 "Check sensors and encoders if the halt was out-of-distribution.",
+                 "Reset the guard only after the cause is understood."],
+            ))
+        elif event.metrics.get("guard.clamp", 0.0) >= 1.0:
+            findings.append(finding(
+                RobotSeverity.warning,
+                "Policy actions clamped by safety guard",
+                "The learned policy proposed actions outside the safety envelope; "
+                "the guard corrected them before they reached the robot.",
+                evidence,
+                ["Review whether the envelope or the policy is miscalibrated.",
+                 "Compare the current task against the policy's training data."],
+            ))
+
     return findings
