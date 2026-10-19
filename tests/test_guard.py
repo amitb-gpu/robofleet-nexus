@@ -310,3 +310,61 @@ def test_cli_guard_demo_and_verify(tmp_path: Path) -> None:
     assert "intact" in result.output
     result = runner.invoke(app, ["guard", "verify-audit", str(tmp_path / "audit.jsonl")])
     assert result.exit_code == 0, result.output
+
+
+# ── ROS2 adapters: import footprint and closed-loop behaviour (no rclpy) ────
+
+def test_ros2_adapters_import_without_pandas_or_pyarrow() -> None:
+    import subprocess
+    import sys
+
+    code = (
+        "import sys; sys.modules['pyarrow'] = None; sys.modules['pandas'] = None\n"
+        "import robofleet_nexus.adapters.ros2_guard_node\n"
+        "import robofleet_nexus.adapters.ros2_fake_arm\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code], check=False, capture_output=True, text=True
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_fake_arm_schedule_through_guard(tmp_path: Path) -> None:
+    """Replays the fake arm's ROS2 loop in-process against the demo envelope."""
+    from robofleet_nexus.adapters.ros2_fake_arm import (
+        CYCLE_STEPS,
+        WRIST_3,
+        encoder_slip,
+        scripted_action,
+    )
+    from robofleet_nexus.guard.demo import run_demo
+    from robofleet_nexus.guard.scenario import HZ, nominal
+
+    demo = run_demo(tmp_path)
+    guard = ActionGuard(demo.envelope, baseline=demo.baseline)
+
+    state = nominal(0.0)
+    policy_t, halted_at = 0, None
+    auto_reset_steps = int(3 * HZ)
+    for step in range(CYCLE_STEPS + auto_reset_steps + 5):
+        observed = state.copy()
+        observed[WRIST_3] += encoder_slip(step)
+        action, _ = scripted_action(step, policy_t)
+        d = guard.check(action, observation=observed.tolist())
+        if d.safe_action is not None:
+            state = np.asarray(d.safe_action)
+        if guard.latched and halted_at is None:
+            halted_at = step
+        if halted_at is not None and step - halted_at >= auto_reset_steps:
+            guard.reset(operator="demo-operator")
+            halted_at = None
+        if not guard.latched:
+            policy_t += 1
+
+    kinds = guard.stats.violations_by_kind
+    assert kinds.get("rate_limit", 0) > 0
+    assert kinds.get("position_limit", 0) > 0
+    assert kinds.get("observation_ood") == 1  # the slip doesn't re-halt after the reset
+    assert kinds.get("non_finite_action") == 1
+    assert "clamp_escalation" not in kinds
+    assert guard.stats.resets == 2

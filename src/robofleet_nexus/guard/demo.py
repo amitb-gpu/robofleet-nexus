@@ -29,14 +29,11 @@ from robofleet_nexus.audit.hash_chain import HashChainAuditLog
 from robofleet_nexus.guard.baseline import ObservationBaseline
 from robofleet_nexus.guard.core import ActionGuard, GuardDecision
 from robofleet_nexus.guard.envelope import SafetyEnvelope
+from robofleet_nexus.guard.scenario import HZ, JOINTS, nominal
 from robofleet_nexus.lerobot.exporter import export_dataset
 from robofleet_nexus.lerobot.schema import LeRobotEpisode, LeRobotFrame
 
-JOINTS = ["shoulder_pan", "shoulder_lift", "elbow", "wrist_1", "wrist_2", "wrist_3"]
-HZ = 30.0
-AMPLITUDE = np.array([0.6, 0.4, 0.5, 0.3, 0.3, 0.2])
-OFFSET = np.array([0.0, -0.8, 1.2, -0.4, 0.0, 0.0])
-OMEGA = np.array([0.5, 0.7, 0.6, 0.9, 1.1, 0.8])
+__all__ = ["HZ", "JOINTS", "DemoResult", "nominal", "run_demo"]
 
 SPIKE_STEP = 80
 DRIFT_STEPS = range(150, 155)
@@ -56,12 +53,6 @@ class DemoResult:
     interventions: list[GuardDecision] = field(default_factory=list)
     resets: list[int] = field(default_factory=list)
     chain_ok: bool = False
-
-
-def nominal(t: float, phase: NDArray[np.float64] | None = None) -> NDArray[np.float64]:
-    p = phase if phase is not None else np.zeros(len(JOINTS))
-    result: NDArray[np.float64] = OFFSET + AMPLITUDE * np.sin(OMEGA * t + p)
-    return result
 
 
 def make_demonstrations(n_episodes: int = 6, frames: int = 300, seed: int = 7) -> list[

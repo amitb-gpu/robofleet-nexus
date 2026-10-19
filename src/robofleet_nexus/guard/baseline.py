@@ -18,7 +18,6 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import numpy as np
-import pyarrow.parquet as pq
 from numpy.typing import NDArray
 from pydantic import BaseModel, Field
 
@@ -81,6 +80,10 @@ class ObservationBaseline(BaseModel):
         cls, root: Path | str, column: str = "observation.state"
     ) -> ObservationBaseline:
         """Fit from a LeRobot v3 dataset directory (meta/ + data/chunk-*/*.parquet)."""
+        # Imported here so the runtime guard (and the ROS2 node, which runs under the
+        # system Python) only needs numpy, pydantic and PyYAML.
+        import pyarrow.parquet as pq
+
         root = Path(root)
         files = sorted((root / "data").glob("chunk-*/episode_*.parquet"))
         if not files:

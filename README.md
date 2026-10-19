@@ -44,13 +44,30 @@ robofleet guard demo --post http://localhost:8000 --realtime   # stream to the d
 robofleet guard verify-audit guard_demo/audit.jsonl
 ```
 
-Run it in front of a real policy (ROS2 Jazzy):
+Run it over ROS2 Jazzy. The node runs under the system Python 3.12 that ROS2 uses, not conda. It needs only numpy (already installed with ROS2), pydantic 2, PyYAML and httpx. Set that up once:
+
+```
+/usr/bin/python3 -m venv --system-site-packages ~/venvs/ros2-guard   # needs: sudo apt install python3.12-venv
+~/venvs/ros2-guard/bin/pip install "pydantic>=2" pyyaml httpx
+```
+
+Then try the full loop with a fake arm and scripted policy (no Isaac Sim needed):
+
+```
+# every terminal:
+source /opt/ros/jazzy/setup.bash && source ~/venvs/ros2-guard/bin/activate && export PYTHONPATH=$PWD/src
+
+python -m robofleet_nexus.adapters.ros2_guard_node --robot-id arm_demo \
+  --envelope guard_demo/envelope.yaml --baseline guard_demo/baseline.json   # terminal 1
+python -m robofleet_nexus.adapters.ros2_fake_arm                           # terminal 2
+```
+
+In front of a real policy, point it at your policy's output topic and an envelope fitted to the policy's training data:
 
 ```
 robofleet guard fit-baseline ~/robofleet_datasets/bot_001/<export_dir> --out guard_config
-source /opt/ros/jazzy/setup.bash
-PYTHONPATH=src /usr/bin/python3 -m robofleet_nexus.adapters.ros2_guard_node \
-  --robot-id bot_001 --envelope guard_config/envelope.yaml --baseline guard_config/baseline.json
+python -m robofleet_nexus.adapters.ros2_guard_node --robot-id bot_001 \
+  --envelope guard_config/envelope.yaml --baseline guard_config/baseline.json
 # reset after a halt:
 ros2 topic pub --once /guard/reset std_msgs/String "{data: 'your-name'}"
 ```

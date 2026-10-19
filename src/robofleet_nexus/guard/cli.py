@@ -51,12 +51,19 @@ def demo(
         client = httpx.Client(base_url=post, timeout=5.0)
 
     def forward(decision: GuardDecision) -> None:
+        nonlocal client
         if client is None:
             return
         try:
             client.post("/telemetry", json=decision_to_event(decision, source="mock"))
         except Exception as exc:  # noqa: BLE001 - the demo should keep running
-            console.print(f"[dim]could not post to {post}: {exc}[/dim]")
+            console.print(
+                f"[yellow]Could not reach {post} ({exc}). Is the API running? "
+                "Continuing without posting.[/yellow]\n"
+                "[dim]Start it with: uvicorn robofleet_nexus.api.main:app --port 8000[/dim]"
+            )
+            client.close()
+            client = None
 
     def pace(_step: int) -> None:
         if realtime:
