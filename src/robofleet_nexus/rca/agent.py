@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
 
 from anthropic import AsyncAnthropic
@@ -15,27 +16,59 @@ logger = logging.getLogger("robofleet.rca")
 # ── Spend guard ───────────────────────────────────────────────────────────────
 # Hard cap: max RCA calls per day across all robots.
 # At ~2500 tokens/call and $3/MTok that's roughly $0.75/day max.
+#
+# The count is stored on disk so restarting the API (or running it with --reload)
+# does not reset it. Override with ROBOFLEET_RCA_MAX_PER_DAY and
+# ROBOFLEET_RCA_USAGE_FILE.
 _MAX_RCA_CALLS_PER_DAY = 25
-_rca_call_count: int = 0
-_rca_call_date: str = ""
+_DEFAULT_USAGE_FILE = Path.home() / ".robofleet" / "rca_usage.json"
+
+
+def _usage_file() -> Path:
+    return Path(os.environ.get("ROBOFLEET_RCA_USAGE_FILE", str(_DEFAULT_USAGE_FILE)))
+
+
+def _max_calls_per_day() -> int:
+    try:
+        return int(os.environ.get("ROBOFLEET_RCA_MAX_PER_DAY", _MAX_RCA_CALLS_PER_DAY))
+    except ValueError:
+        return _MAX_RCA_CALLS_PER_DAY
+
+
+def _read_usage(path: Path) -> dict:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
 
 def _check_spend_guard() -> bool:
-    """Returns True if the call is allowed, False if daily cap is reached."""
+    """Returns True if the call is allowed (and counts it), False if the daily cap is reached."""
     import datetime
-    global _rca_call_count, _rca_call_date
     today = datetime.date.today().isoformat()
-    if _rca_call_date != today:
-        _rca_call_date = today
-        _rca_call_count = 0
-    if _rca_call_count >= _MAX_RCA_CALLS_PER_DAY:
+    path = _usage_file()
+    usage = _read_usage(path)
+    count = int(usage.get("count", 0)) if usage.get("date") == today else 0
+    cap = _max_calls_per_day()
+    if count >= cap:
         logger.warning(
-            "RCA daily cap reached (%d calls). Skipping to protect API credits. "
-            "Reset tomorrow or raise _MAX_RCA_CALLS_PER_DAY in rca/agent.py.",
-            _MAX_RCA_CALLS_PER_DAY,
+            "RCA daily cap reached (%d/%d calls, counted in %s). Skipping to protect "
+            "API credits. Resets tomorrow; raise ROBOFLEET_RCA_MAX_PER_DAY to allow more.",
+            count, cap, path,
         )
         return False
-    _rca_call_count += 1
-    logger.info("RCA call %d/%d today", _rca_call_count, _MAX_RCA_CALLS_PER_DAY)
+    count += 1
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps({"date": today, "count": count}), encoding="utf-8")
+        tmp.replace(path)
+    except OSError as exc:
+        # If the count can't be recorded, refuse rather than risk unbounded spend.
+        logger.error("Cannot record RCA usage in %s (%s); skipping RCA.", path, exc)
+        return False
+    logger.warning("RCA call %d/%d today (real API call)", count, cap)
     return True
 
 _client = AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
