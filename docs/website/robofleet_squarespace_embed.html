@@ -1,0 +1,223 @@
+<!-- RoboFleet Guard — Squarespace Code Block embed. Self-contained; all styles scoped to #rfg. -->
+<style>
+#rfg{--bg:#0d1117;--panel:#151b24;--panel2:#1b2330;--line:#263042;--text:#e6ebf2;--muted:#93a0b4;
+  --green:#3ecf8e;--amber:#f2b33d;--red:#f2555a;--blue:#5aa9ff;
+  background:var(--bg);color:var(--text);border-radius:14px;padding:clamp(20px,4vw,56px);
+  font-family:inherit;line-height:1.55;max-width:1180px;margin:0 auto;box-sizing:border-box}
+#rfg *{box-sizing:border-box}
+#rfg .flow>*,#rfg .grid3>*,#rfg .two>*{min-width:0}
+#rfg a{color:var(--blue);text-decoration:none}
+#rfg a:hover{text-decoration:underline}
+#rfg .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#rfg .kicker{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--green);margin:0 0 14px}
+#rfg h1{font-size:clamp(28px,4.2vw,46px);line-height:1.12;margin:0 0 18px;color:var(--text);font-weight:650;letter-spacing:-.01em}
+#rfg h2{font-size:clamp(22px,2.8vw,30px);line-height:1.2;margin:0 0 12px;color:var(--text);font-weight:600}
+#rfg h3{font-size:17px;margin:0 0 6px;color:var(--text);font-weight:600}
+#rfg p{margin:0 0 12px;color:var(--muted);font-size:16px}
+#rfg .lead{font-size:clamp(16px,1.6vw,19px);color:#c4cddb;max-width:760px}
+#rfg section{margin-top:clamp(40px,6vw,72px)}
+#rfg .label{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+#rfg .chips{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 26px}
+#rfg .chip{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;padding:5px 11px;
+  border:1px solid var(--line);border-radius:999px;color:var(--muted);background:var(--panel)}
+#rfg .btns{display:flex;flex-wrap:wrap;gap:12px}
+#rfg .btn{display:inline-block;padding:11px 20px;border-radius:8px;font-weight:600;font-size:15px}
+#rfg .btn.primary{background:var(--green);color:#06140d}
+#rfg .btn.ghost{border:1px solid var(--line);color:var(--text)}
+#rfg .btn:hover{text-decoration:none;filter:brightness(1.08)}
+
+/* flow diagram */
+#rfg .flow{display:grid;grid-template-columns:1fr auto 1.25fr auto 1fr;gap:12px;align-items:stretch;margin-top:22px}
+#rfg .node{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+#rfg .node.guard{border-color:var(--green);box-shadow:0 0 0 1px rgba(62,207,142,.25) inset}
+#rfg .node .topic{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:var(--muted);margin-top:6px}
+#rfg .arrow{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:22px}
+#rfg .sinks{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+#rfg .sinks span{font-size:13px;color:var(--muted);background:var(--panel2);border-radius:6px;padding:5px 10px}
+
+/* verdict cards */
+#rfg .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+#rfg .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+#rfg .card.pass{border-top:3px solid var(--green)}
+#rfg .card.clamp{border-top:3px solid var(--amber)}
+#rfg .card.halt{border-top:3px solid var(--red)}
+#rfg .verdict{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:700;letter-spacing:.06em;font-size:14px;margin-bottom:8px}
+#rfg .pass .verdict{color:var(--green)} #rfg .clamp .verdict{color:var(--amber)} #rfg .halt .verdict{color:var(--red)}
+#rfg .card p{font-size:15px}
+#rfg .card .gets{font-size:13px;color:var(--text);border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+
+/* demo table */
+#rfg table{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px}
+#rfg th{text-align:left;font-weight:500;color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  border-bottom:1px solid var(--line);padding:8px 10px}
+#rfg td{padding:10px;border-bottom:1px solid var(--line);color:#c4cddb;vertical-align:top}
+#rfg td.v{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:700;white-space:nowrap}
+#rfg td.v.c{color:var(--amber)} #rfg td.v.h{color:var(--red)}
+#rfg .tablewrap{overflow-x:auto}
+
+#rfg figure{margin:20px 0 0}
+#rfg figure img{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);display:block}
+#rfg figcaption{font-size:13px;color:var(--muted);margin-top:8px}
+
+#rfg .two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+#rfg pre{background:#0a0e14;border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;
+  font-size:13px;color:#c4cddb;margin:12px 0 0;line-height:1.5}
+#rfg .boundary{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:0 12px 12px 0;padding:20px 22px}
+#rfg ul{margin:8px 0 0;padding-left:20px;color:var(--muted)}
+#rfg li{margin:6px 0;font-size:15px}
+#rfg li b{color:var(--text);font-weight:600}
+#rfg .cta{text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:clamp(24px,4vw,40px)}
+#rfg .cta p{margin-left:auto;margin-right:auto;max-width:620px}
+
+@media (max-width:820px){
+  #rfg .flow{grid-template-columns:1fr}
+  #rfg .arrow{transform:rotate(90deg);height:24px}
+  #rfg .grid3,#rfg .two{grid-template-columns:1fr}
+}
+</style>
+
+<div id="rfg">
+
+  <!-- Hero -->
+  <p class="kicker">RoboFleet Guard · Runtime safety for learned robot policies</p>
+  <h1>Every action a learned policy takes, checked before it reaches the robot.</h1>
+  <p class="lead">VLA and reinforcement-learning policies are probabilistic. They spike, drift past joint limits, and act
+    confidently on observations they were never trained on. RoboFleet Guard sits between the policy and the robot and
+    returns a verdict on every control step: pass it, correct it, or stop it, with a tamper-evident record of why.</p>
+  <div class="chips">
+    <span class="chip">ROS2 Jazzy</span><span class="chip">LeRobot v3 datasets</span>
+    <span class="chip">NVIDIA Isaac-ready topics</span><span class="chip">SHA-256 audit chain</span>
+    <span class="chip">Claude root-cause analysis</span><span class="chip">Open source · MIT</span>
+  </div>
+  <div class="btns">
+    <a class="btn primary" href="https://github.com/amitb-gpu/robofleet-nexus" target="_blank" rel="noopener">View on GitHub</a>
+    <a class="btn ghost" href="https://www.quantum-clarity.com/contact">Become a design partner</a>
+  </div>
+
+  <!-- Where it sits -->
+  <section>
+    <p class="label">Where it sits</p>
+    <h2>A safety layer in the control loop, not another dashboard.</h2>
+    <p>The policy publishes what it wants to do. The guard decides what actually reaches the robot.
+      It never generates motion of its own: it only passes, narrows, or stops what the policy proposed.</p>
+    <div class="flow">
+      <div class="node"><h3>Learned policy</h3><p style="margin:0;font-size:14px">VLA, ACT, diffusion or RL</p>
+        <div class="topic">/policy/joint_command</div></div>
+      <div class="arrow">→</div>
+      <div class="node guard"><h3>RoboFleet Guard</h3><p style="margin:0;font-size:14px">Envelope · out-of-distribution check · latch</p>
+        <div class="topic">/guard/status · /guard/reset</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><h3>Robot or simulator</h3><p style="margin:0;font-size:14px">Hardware or Isaac Sim joint controller</p>
+        <div class="topic">/joint_command · /joint_states</div></div>
+    </div>
+    <div class="sinks"><span>↳ Hash-chained audit log</span><span>↳ Diagnostic findings</span><span>↳ AI root-cause analysis</span><span>↳ Live fleet dashboard</span></div>
+  </section>
+
+  <!-- Verdicts -->
+  <section>
+    <p class="label">Three verdicts</p>
+    <h2>Correct what can be corrected. Stop what can't.</h2>
+    <div class="grid3">
+      <div class="card pass"><div class="verdict">PASS</div>
+        <p>The action is inside the safety envelope.</p>
+        <div class="gets">Robot receives: the action, unchanged.</div></div>
+      <div class="card clamp"><div class="verdict">CLAMP</div>
+        <p>A joint target is out of range, or the step is faster than the policy's own demonstrations ever moved.</p>
+        <div class="gets">Robot receives: a corrected action inside the envelope.</div></div>
+      <div class="card halt"><div class="verdict">HALT</div>
+        <p>NaN or infinite output, effort or workspace breach, an out-of-distribution observation, or a policy that keeps pushing past its limits.</p>
+        <div class="gets">Robot receives: its last safe command. The guard stays latched until a named operator resets it.</div></div>
+    </div>
+  </section>
+
+  <!-- Envelope from data -->
+  <section>
+    <div class="two">
+      <div>
+        <p class="label">Envelope from your data</p>
+        <h2>Limits derived from what the policy was trained on.</h2>
+        <p>Point the guard at the LeRobot v3 dataset behind a policy, including datasets RoboFleet Nexus exports
+          directly from fleet telemetry. It derives joint ranges, per-step rate limits, and an observation baseline,
+          giving a team a reviewed starting envelope instead of a blank YAML file.</p>
+        <pre class="mono">robofleet guard fit-baseline ~/robofleet_datasets/arm_01/ --out guard_config/</pre>
+      </div>
+      <div>
+        <p class="label">Evidence, not logs</p>
+        <h2>A record a safety reviewer can verify.</h2>
+        <p>Every clamp, halt and operator reset is written to a SHA-256 hash chain: what the policy proposed, what
+          the guard sent instead, and which rule fired. Editing any past record breaks the chain, and one command
+          proves whether it's intact.</p>
+        <pre class="mono">robofleet guard verify-audit audit.jsonl
+Chain intact: 15 records verified.</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo -->
+  <section>
+    <p class="label">Verified development run · October 19, 2026</p>
+    <h2>Four injected faults, caught over live ROS2.</h2>
+    <p>A 6-joint arm and scripted policy run against the guard node over ROS2 Jazzy, cycling through four faults
+      every 16 seconds. These are the guard's actual verdicts from that run.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Injected fault</th><th>Verdict</th><th>What the guard reported</th></tr></thead>
+      <tbody>
+        <tr><td>One-step action spike on the elbow (+0.8 rad)</td><td class="v c">CLAMP</td><td>elbow target 2.487 outside [0.590, 1.812]</td></tr>
+        <tr><td>Policy driving wrist_1 past its limit</td><td class="v c">CLAMP</td><td>wrist_1 target 0.400 outside [-0.775, -0.023]</td></tr>
+        <tr><td>wrist_3 encoder slips +1.2 rad</td><td class="v h">HALT</td><td>observation is 9.8 std devs from training data on wrist_3</td></tr>
+        <tr><td>NaN in the policy output</td><td class="v h">HALT</td><td>policy returned NaN/inf for wrist_2</td></tr>
+      </tbody>
+    </table></div>
+    <figure>
+      <img src="https://raw.githubusercontent.com/amitb-gpu/robofleet-nexus/guard/docs/assets/guard_events.png"
+           alt="Dashboard event stream showing guard CLAMP and HALT events with the violated limits" loading="lazy">
+      <figcaption>The live event stream: each intervention arrives with the limit it violated.</figcaption>
+    </figure>
+    <figure>
+      <img src="https://raw.githubusercontent.com/amitb-gpu/robofleet-nexus/guard/docs/assets/guard_rca.png"
+           alt="Claude root-cause analysis card citing the halted step, the joint limits and recommended operator actions" loading="lazy">
+      <figcaption>Claude's root-cause analysis of the same run, citing the halted step and the limits involved,
+        and advising the operator not to reset the guard until the cause is confirmed.</figcaption>
+    </figure>
+  </section>
+
+  <!-- Who -->
+  <section>
+    <p class="label">Who this is for</p>
+    <h2>Teams moving learned policies from the lab onto real robots.</h2>
+    <div class="grid3">
+      <div class="card"><h3>Robotics teams</h3><p>Manipulation, AMR and warehouse teams deploying VLA or RL policies who need a guardrail they didn't have to build.</p></div>
+      <div class="card"><h3>Safety reviewers</h3><p>People who must sign off on a learned controller and need evidence of what it did and what was stopped.</p></div>
+      <div class="card"><h3>Policy researchers</h3><p>Researchers who want failure cases captured automatically as data, not reconstructed from memory.</p></div>
+    </div>
+  </section>
+
+  <!-- Boundary -->
+  <section>
+    <p class="label">The current boundary</p>
+    <div class="boundary">
+      <h2>What it is today, and what it isn't.</h2>
+      <ul>
+        <li><b>A software layer.</b> It does not replace hardware e-stops, a certified safety controller, or functional-safety engineering.</li>
+        <li><b>Validated with a scripted policy and simulated arm over ROS2.</b> Integration with a pretrained LeRobot policy in Isaac Sim is in progress.</li>
+        <li><b>Out-of-distribution detection is per-joint statistics.</b> It catches gross faults like a slipped encoder; subtler distribution shift needs richer models.</li>
+        <li><b>Derived envelopes are a starting point.</b> They must be reviewed before use; they are not certified limits.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section>
+    <div class="cta">
+      <h2>Running learned policies on real hardware?</h2>
+      <p>We're looking for design partners to put the guard in front of their policies and shape what it checks next.</p>
+      <div class="btns" style="justify-content:center;margin-top:16px">
+        <a class="btn primary" href="https://www.quantum-clarity.com/contact">Talk to us</a>
+        <a class="btn ghost" href="https://github.com/amitb-gpu/robofleet-nexus" target="_blank" rel="noopener">Try it from GitHub</a>
+      </div>
+    </div>
+  </section>
+
+</div>
