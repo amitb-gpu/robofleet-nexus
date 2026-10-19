@@ -174,6 +174,19 @@ def run_guard_node(args: argparse.Namespace) -> None:
                 self.get_logger().error(str(exc))
                 return
             self.get_logger().info(f"guard reset by operator '{operator}'")
+            # Confirm on /guard/status. Messages from one publisher arrive in order, so
+            # subscribers see every "still latched" status from before the reset first.
+            status = String()
+            status.data = json.dumps(
+                {
+                    "robot_id": guard.robot_id,
+                    "verdict": "reset",
+                    "latched": False,
+                    "operator": operator,
+                    "resets": guard.stats.resets,
+                }
+            )
+            self._status_pub.publish(status)
 
         def _publish_status(self, decision: GuardDecision) -> None:
             status = String()
