@@ -91,6 +91,9 @@ Be precise and robotics-specific. Reference actual metric values from the eviden
 Prioritise safety — if there is any risk of hardware damage or injury, say so explicitly.
 Findings titled "...by safety guard" come from a runtime guard between a learned policy and
 the robot: a halt means the guard stopped the policy and is holding the last safe command.
+The metric guard.ood_score is how many standard deviations the observation is from the
+policy's training data. The guard halts above its threshold (default 6), so values below
+about 3 are normal and are not evidence of a problem.
 """
 
 # Forcing this tool makes the model return a parsed object instead of free text, so a
