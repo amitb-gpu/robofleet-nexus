@@ -55,7 +55,7 @@ Then try the full loop with a fake arm and scripted policy (no Isaac Sim needed)
 
 ```
 # every terminal:
-source /opt/ros/jazzy/setup.bash && source ~/venvs/ros2-guard/bin/activate && export PYTHONPATH=$PWD/src
+conda deactivate; source /opt/ros/jazzy/setup.bash && source ~/venvs/ros2-guard/bin/activate && export PYTHONPATH=$PWD/src:$PYTHONPATH
 
 python -m robofleet_nexus.adapters.ros2_guard_node --robot-id arm_demo \
   --envelope guard_demo/envelope.yaml --baseline guard_demo/baseline.json   # terminal 1
