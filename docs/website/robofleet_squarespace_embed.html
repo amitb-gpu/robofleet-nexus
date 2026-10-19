@@ -495,16 +495,16 @@
             </div>
 
             <figure class="rfg-shot">
-                <img src="https://raw.githubusercontent.com/amitb-gpu/robofleet-nexus/guard/docs/assets/guard_events.png"
-                     alt="Dashboard event stream showing guard CLAMP and HALT events with the violated limits" loading="lazy">
-                <figcaption>The RoboFleet Nexus event stream during the run: each intervention arrives with the limit it violated.</figcaption>
+                <img src="https://raw.githubusercontent.com/amitb-gpu/robofleet-nexus/guard/docs/assets/guard_rca.png"
+                     alt="Guard panel holding position after a NaN halt, beside Claude's root-cause analysis of the run" loading="lazy">
+                <figcaption>The guard holding position after a NaN halt, with its two-minute intervention timeline, beside Claude's
+                    root-cause analysis of the run, which advises against resetting into an unstable policy until the cause is diagnosed.</figcaption>
             </figure>
 
             <figure class="rfg-shot">
-                <img src="https://raw.githubusercontent.com/amitb-gpu/robofleet-nexus/guard/docs/assets/guard_rca.png"
-                     alt="Claude root-cause analysis card citing the halted step, the joint limits and recommended operator actions" loading="lazy">
-                <figcaption>Claude's root-cause analysis of the same run, citing the halted step and the limits involved,
-                    and advising the operator not to reset the guard until the cause is confirmed.</figcaption>
+                <img src="https://raw.githubusercontent.com/amitb-gpu/robofleet-nexus/guard/docs/assets/guard_events.png"
+                     alt="Dashboard event stream showing guard HALT, CLAMP and RESET events with the violated limits" loading="lazy">
+                <figcaption>The event stream during the run: each halt and clamp arrives with the limit it violated, and each operator reset is recorded.</figcaption>
             </figure>
 
         </div>
