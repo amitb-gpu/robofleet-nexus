@@ -5,687 +5,665 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>RoboFleet Nexus</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-/* ── Reset & tokens ─────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:       #0d0f14;
-  --bg2:      #13161d;
-  --bg3:      #1a1e28;
-  --border:   rgba(255,255,255,.07);
-  --border2:  rgba(255,255,255,.13);
-  --text:     #e8eaf0;
-  --muted:    #6b7080;
-  --accent:   #4f9cf9;
-  --accent2:  #7c5cfc;
-  --green:    #34d399;
-  --amber:    #fbbf24;
-  --red:      #f87171;
-  --cyan:     #22d3ee;
-  --purple:   #a78bfa;
-  --mono:     'IBM Plex Mono', monospace;
-  --sans:     'Space Grotesk', system-ui, sans-serif;
-  --r:        8px;
-}
-html{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5}
-body{min-height:100vh;overflow-x:hidden}
+  --page:#f3f6fd;
+  --surface:#ffffff;
+  --surface-2:#f7f9fe;
+  --line:#e3e8f4;
+  --ink:#14213d;
+  --ink-2:#4a5677;
+  --ink-3:#8590ab;
 
-/* ── Layout ─────────────────────────────────────────────────────── */
-.shell{display:grid;grid-template-rows:52px 1fr;min-height:100vh}
-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 20px;border-bottom:1px solid var(--border);
-  background:var(--bg2);position:sticky;top:0;z-index:100;
-}
-.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:.02em}
-.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
-.header-right{display:flex;align-items:center;gap:16px}
-.conn-badge{
-  display:flex;align-items:center;gap:6px;padding:4px 10px;
-  border-radius:20px;font-size:12px;font-family:var(--mono);
-  border:1px solid var(--border2);background:var(--bg3);
-  transition:all .3s;
-}
-.conn-badge.connected{border-color:rgba(52,211,153,.3);color:var(--green)}
-.conn-badge.disconnected{border-color:rgba(248,113,113,.3);color:var(--red)}
-.conn-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
-.stat-chip{font-size:11px;color:var(--muted);font-family:var(--mono)}
+  --blue:#2f5bea;   --blue-soft:#e8eefe;   --blue-ink:#1d3fb8;
+  --purple:#7b4ddb; --purple-soft:#f1ebfd; --purple-ink:#5a2fb8;
+  --red:#e0334d;    --red-soft:#fde9ec;    --red-ink:#b3172f;
+  --amber:#e8971c;  --amber-soft:#fff3df;  --amber-ink:#94570a;
+  --green:#1f9d6b;  --green-soft:#e3f6ee;  --green-ink:#13704b;
 
-main{padding:20px;display:flex;flex-direction:column;gap:20px}
-
-/* ── Grid rows ───────────────────────────────────────────────────── */
-.row{display:grid;gap:16px}
-.row-4{grid-template-columns:repeat(4,1fr)}
-.row-3{grid-template-columns:repeat(3,1fr)}
-.row-2-1{grid-template-columns:2fr 1fr}
-.row-1-2{grid-template-columns:1fr 2fr}
-
-/* ── Panel ───────────────────────────────────────────────────────── */
-.panel{
-  background:var(--bg2);border:1px solid var(--border);
-  border-radius:var(--r);overflow:hidden;
+  --sans:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --radius-lg:18px; --radius:12px; --radius-sm:8px;
+  --shadow:0 1px 2px rgba(20,33,61,.04),0 8px 24px rgba(31,58,138,.07);
 }
-.panel-head{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 16px;border-bottom:1px solid var(--border);
-}
-.panel-title{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.panel-body{padding:14px 16px}
-.panel-count{font-size:11px;font-family:var(--mono);color:var(--muted);background:var(--bg3);padding:2px 8px;border-radius:10px;border:1px solid var(--border)}
+html{font-size:15px}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);line-height:1.5;
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
 
-/* ── KPI stat cards ──────────────────────────────────────────────── */
-.kpi{
-  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
-  padding:16px;display:flex;flex-direction:column;gap:6px;
-}
-.kpi-label{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
-.kpi-value{font-size:28px;font-weight:600;font-family:var(--mono);line-height:1}
-.kpi-sub{font-size:11px;color:var(--muted)}
-.kpi.green .kpi-value{color:var(--green)}
-.kpi.amber .kpi-value{color:var(--amber)}
-.kpi.blue  .kpi-value{color:var(--accent)}
-.kpi.purple .kpi-value{color:var(--purple)}
+/* ── Header ───────────────────────────────────────────────────── */
+.topbar{background:linear-gradient(100deg,#1e3a8a 0%,#2f5bea 45%,#6a3fd4 100%);color:#fff}
+.topbar-inner{max-width:1500px;margin:0 auto;padding:16px 28px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+.brand-mark{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.16);display:grid;place-items:center}
+.brand-sub{font-weight:500;font-size:.85rem;opacity:.8;margin-left:2px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hdr-chip{font-size:.8rem;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.14);color:#fff}
+.conn{display:flex;align-items:center;gap:8px;font-size:.8rem;font-weight:600;padding:6px 12px;border-radius:999px;background:#fff;color:var(--ink)}
+.conn-dot{width:8px;height:8px;border-radius:50%;background:var(--ink-3)}
+.conn.ok .conn-dot{background:var(--green)}
+.conn.down .conn-dot{background:var(--red)}
 
-/* ── GPU cards ───────────────────────────────────────────────────── */
-.gpu-grid{display:flex;flex-direction:column;gap:10px}
-.gpu-card{
-  background:var(--bg3);border:1px solid var(--border);border-radius:6px;
-  padding:12px 14px;
-}
-.gpu-card.high-load{border-color:rgba(251,191,36,.25)}
-.gpu-card.critical-load{border-color:rgba(248,113,113,.35)}
-.gpu-name{font-size:13px;font-weight:500;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
-.profile-badge{
-  font-size:10px;font-family:var(--mono);padding:2px 7px;
-  border-radius:3px;font-weight:400;
-}
-.profile-LAPTOP_DEV{background:rgba(107,112,128,.2);color:var(--muted)}
-.profile-WORKSTATION_DEV{background:rgba(79,156,249,.15);color:var(--accent)}
-.profile-WORKSTATION_HIGH{background:rgba(124,92,252,.15);color:var(--purple)}
-.profile-PRODUCTION{background:rgba(52,211,153,.15);color:var(--green)}
-.gpu-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
-.gm-label{font-size:10px;color:var(--muted);font-family:var(--mono)}
-.gm-value{font-size:14px;font-weight:500;font-family:var(--mono)}
-.bar-track{height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-top:4px}
-.bar-fill{height:100%;border-radius:2px;transition:width .6s ease}
-.bar-fill.vram{background:var(--accent2)}
-.bar-fill.util{background:var(--cyan)}
-.bar-fill.temp{background:var(--amber)}
-.bar-fill.warn{background:var(--amber)}
-.bar-fill.crit{background:var(--red)}
-.gpu-wsl-tag{font-size:10px;color:var(--muted);font-family:var(--mono);opacity:.6}
+/* ── Layout ───────────────────────────────────────────────────── */
+main{max-width:1500px;margin:0 auto;padding:24px 28px 40px;display:grid;gap:20px;
+  grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);
+  grid-template-areas:
+    "guard rca"
+    "events findings"
+    "events fleet"
+    "audit gpu"
+    "audit jobs"}
+.a-guard{grid-area:guard}.a-rca{grid-area:rca}.a-events{grid-area:events}.a-findings{grid-area:findings}
+.a-fleet{grid-area:fleet}.a-gpu{grid-area:gpu}.a-audit{grid-area:audit}.a-jobs{grid-area:jobs}
 
-/* ── Robot fleet table ───────────────────────────────────────────── */
-.robot-table{width:100%;border-collapse:collapse;font-size:12px}
-.robot-table th{text-align:left;padding:6px 10px;color:var(--muted);font-weight:400;letter-spacing:.05em;text-transform:uppercase;font-size:10px;border-bottom:1px solid var(--border)}
-.robot-table td{padding:7px 10px;border-bottom:1px solid var(--border);font-family:var(--mono)}
-.robot-table tr:last-child td{border-bottom:none}
-.robot-table tr:hover td{background:var(--bg3)}
-.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle}
-.s-ok{background:var(--green)}
-.s-warn{background:var(--amber);animation:pulse 1.5s infinite}
-.s-error{background:var(--red);animation:pulse .8s infinite}
-.s-offline{background:var(--muted)}
-.batt-bar{display:inline-block;width:36px;height:6px;background:rgba(255,255,255,.08);border-radius:2px;vertical-align:middle;position:relative;overflow:hidden}
-.batt-fill{position:absolute;left:0;top:0;height:100%;border-radius:2px;transition:width .5s}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow);
+  display:flex;flex-direction:column;min-width:0}
+.panel-head{display:flex;align-items:center;gap:10px;padding:16px 20px 12px}
+.panel-title{font-weight:700;font-size:1rem}
+.panel-note{font-size:.8rem;color:var(--ink-3)}
+.count{margin-left:auto;font-size:.78rem;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
+.panel-body{padding:0 20px 18px;min-width:0}
+.empty{padding:22px 8px;text-align:center;color:var(--ink-3);font-size:.88rem}
+.empty code{font-family:var(--mono);font-size:.82rem;background:var(--surface-2);padding:2px 6px;border-radius:6px;color:var(--ink-2)}
 
-/* ── Event stream ────────────────────────────────────────────────── */
-.event-stream{
-  height:280px;overflow-y:auto;font-family:var(--mono);font-size:11px;
-  display:flex;flex-direction:column-reverse;gap:1px;
-  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+/* ── Guard (the hero) ─────────────────────────────────────────── */
+.guard{overflow:hidden}
+.guard-state{margin:0 20px;border-radius:var(--radius);padding:20px 22px;display:flex;gap:18px;align-items:center;
+  background:var(--green-soft);border:1px solid #bfe8d5;transition:background .3s,border-color .3s}
+.guard-icon{flex:none;width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:var(--green);color:#fff}
+.guard-icon svg{width:28px;height:28px}
+.guard-word{font-size:1.75rem;font-weight:800;letter-spacing:-.02em;line-height:1.1;color:var(--green-ink)}
+.guard-detail{color:var(--ink-2);font-size:.95rem;margin-top:4px}
+.guard-meta{margin-left:auto;text-align:right;font-size:.8rem;color:var(--ink-3);white-space:nowrap}
+.guard-meta b{display:block;font-size:.95rem;color:var(--ink)}
+
+.guard-state.holding{background:var(--red-soft);border-color:#f6c2cb}
+.guard-state.holding .guard-icon{background:var(--red)}
+.guard-state.holding .guard-word{color:var(--red-ink)}
+.guard-state.correcting{background:var(--amber-soft);border-color:#f6d9a8}
+.guard-state.correcting .guard-icon{background:var(--amber)}
+.guard-state.correcting .guard-word{color:var(--amber-ink)}
+.guard-state.idle{background:var(--surface-2);border-color:var(--line)}
+.guard-state.idle .guard-icon{background:var(--ink-3)}
+.guard-state.idle .guard-word{color:var(--ink-2)}
+
+@keyframes haltRing{0%{box-shadow:0 0 0 0 rgba(224,51,77,.45)}100%{box-shadow:0 0 0 18px rgba(224,51,77,0)}}
+.guard-state.flash .guard-icon{animation:haltRing .9s ease-out 2}
+@media (prefers-reduced-motion:reduce){.guard-state.flash .guard-icon{animation:none}.guard-state{transition:none}}
+
+.guard-tally{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 20px 0}
+.tally{border-radius:var(--radius);padding:12px 14px;background:var(--surface-2);border:1px solid var(--line)}
+.tally-num{font-size:1.6rem;font-weight:800;line-height:1.1}
+.tally-label{font-size:.8rem;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+.sw.clamp{background:var(--amber)}.sw.halt{background:var(--red)}.sw.reset{background:var(--blue)}
+
+.guard{overflow:hidden}
+.timeline{margin:16px 20px 18px;display:flex;flex-direction:column;flex:1}
+.timeline-head{display:flex;justify-content:space-between;font-size:.78rem;color:var(--ink-3);margin-bottom:6px}
+.track{position:relative;flex:1;min-height:64px;border-radius:var(--radius-sm);background:
+  repeating-linear-gradient(90deg,transparent 0,transparent calc(25% - 1px),var(--line) calc(25% - 1px),var(--line) 25%),
+  var(--surface-2);border:1px solid var(--line)}
+.mark{position:absolute;bottom:6px;width:6px;margin-left:-3px;border-radius:3px 3px 1px 1px}
+.mark.halt{height:72%;background:var(--red)}
+.mark.clamp{height:46%;background:var(--amber)}
+.mark.reset{height:20%;background:var(--blue)}
+.mark:hover{outline:2px solid var(--ink);outline-offset:1px}
+.track-tip{position:absolute;top:-34px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:.75rem;
+  padding:4px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;display:none;z-index:2}
+.timeline-axis{display:flex;justify-content:space-between;font-size:.72rem;color:var(--ink-3);margin-top:4px}
+
+/* ── RCA ──────────────────────────────────────────────────────── */
+.rca{border-top:4px solid var(--purple)}
+.rca .panel-title{color:var(--purple-ink)}
+.rca-badge{font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:999px}
+.risk-critical{background:var(--red-soft);color:var(--red-ink)}
+.risk-high{background:var(--amber-soft);color:var(--amber-ink)}
+.risk-medium{background:var(--blue-soft);color:var(--blue-ink)}
+.risk-low{background:var(--green-soft);color:var(--green-ink)}
+.rca-summary{font-size:1.02rem;font-weight:600;line-height:1.5;margin-bottom:14px}
+.rca-causes{list-style:none;display:grid;gap:10px;margin-bottom:14px}
+.rca-causes li{display:grid;grid-template-columns:28px 1fr;gap:10px;font-size:.9rem;color:var(--ink-2)}
+.rank{width:28px;height:28px;border-radius:8px;background:var(--purple-soft);color:var(--purple-ink);font-weight:800;display:grid;place-items:center;font-size:.85rem}
+.conf{font-size:.72rem;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:6px;white-space:nowrap}
+.conf-high{background:var(--purple-soft);color:var(--purple-ink)}
+.conf-medium{background:var(--blue-soft);color:var(--blue-ink)}
+.conf-low{background:var(--surface-2);color:var(--ink-2)}
+.rca-actions{display:grid;gap:8px}
+.action{border-radius:var(--radius-sm);padding:10px 12px;font-size:.88rem;background:var(--surface-2);border-left:4px solid var(--blue)}
+.action.immediate{background:var(--red-soft);border-left-color:var(--red);color:var(--red-ink);font-weight:600}
+.action.soon{border-left-color:var(--amber)}
+.action-pri{font-size:.72rem;font-weight:800;margin-right:6px}
+.rca-foot{margin-top:12px;font-size:.78rem;color:var(--ink-3)}
+
+/* ── Findings ─────────────────────────────────────────────────── */
+.finding-list{display:grid;gap:10px;max-height:320px;overflow-y:auto}
+.finding{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:4px}
+.finding-top{display:flex;align-items:center;gap:8px}
+.sev{font-size:.72rem;font-weight:800;padding:2px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:4px}
+.sev-critical{background:var(--red-soft);color:var(--red-ink)}
+.sev-warning{background:var(--amber-soft);color:var(--amber-ink)}
+.sev-info{background:var(--blue-soft);color:var(--blue-ink)}
+.finding-title{font-weight:700;font-size:.93rem}
+.finding-why{font-size:.86rem;color:var(--ink-2)}
+.finding-meta{font-size:.76rem;color:var(--ink-3)}
+
+/* ── Event stream ─────────────────────────────────────────────── */
+.stream{max-height:430px;overflow-y:auto;display:grid;gap:2px}
+.ev{display:grid;grid-template-columns:70px 78px minmax(0,1fr);gap:10px;align-items:center;padding:7px 8px;border-radius:8px;font-size:.84rem}
+.ev:nth-child(odd){background:var(--surface-2)}
+.ev-ts{color:var(--ink-3);font-size:.78rem}
+.ev-tag{font-size:.7rem;font-weight:800;text-align:center;padding:3px 0;border-radius:999px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
+.ev-tag.halt{background:var(--red);color:#fff;border-color:var(--red)}
+.ev-tag.clamp{background:var(--amber-soft);color:var(--amber-ink);border-color:#f6d9a8}
+.ev-tag.reset{background:var(--blue-soft);color:var(--blue-ink);border-color:#c9d6fc}
+.ev-tag.rca{background:var(--purple-soft);color:var(--purple-ink);border-color:#dccdf8}
+.ev-tag.err{background:var(--red-soft);color:var(--red-ink);border-color:#f6c2cb}
+.ev-msg{font-family:var(--mono);font-size:.78rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stream-filter{display:flex;gap:6px;margin-left:auto}
+.stream-filter button{font:inherit;font-size:.76rem;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink-2);cursor:pointer}
+.stream-filter button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ── Fleet ────────────────────────────────────────────────────── */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi{border-radius:var(--radius);padding:10px 12px;background:var(--surface-2);border:1px solid var(--line)}
+.kpi-num{font-size:1.35rem;font-weight:800;line-height:1.15}
+.kpi-label{font-size:.75rem;color:var(--ink-2)}
+.kpi.blue .kpi-num{color:var(--blue)}.kpi.purple .kpi-num{color:var(--purple)}.kpi.red .kpi-num{color:var(--red)}.kpi.amber .kpi-num{color:var(--amber-ink)}
+.robots{display:grid;gap:8px}
+.robot{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:var(--radius);border:1px solid var(--line)}
+.robot-dot{width:10px;height:10px;border-radius:50%;background:var(--ink-3)}
+.robot-dot.ok{background:var(--green)}.robot-dot.warn{background:var(--amber)}.robot-dot.error{background:var(--red)}
+.robot-name{font-weight:700;font-size:.92rem}
+.robot-msg{font-size:.78rem;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.robot-state{font-size:.72rem;font-weight:800;padding:2px 9px;border-radius:999px}
+.robot-state.ok{background:var(--green-soft);color:var(--green-ink)}
+.robot-state.warn{background:var(--amber-soft);color:var(--amber-ink)}
+.robot-state.error{background:var(--red-soft);color:var(--red-ink)}
+
+/* ── GPU ──────────────────────────────────────────────────────── */
+.gpu{border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.gpu + .gpu{margin-top:10px}
+.gpu-top{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.gpu-name{font-weight:700}
+.tag{font-size:.7rem;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--blue-soft);color:var(--blue-ink)}
+.tag.purple{background:var(--purple-soft);color:var(--purple-ink)}
+.meters{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.meter-label{font-size:.75rem;color:var(--ink-2)}
+.meter-val{font-weight:700;font-size:.95rem}
+.meter-track{height:6px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;margin-top:4px}
+.meter-fill{height:100%;border-radius:999px;background:var(--blue)}
+.meter-fill.purple{background:var(--purple)}
+.meter-fill.hot{background:var(--red)}
+.gpu-foot{display:flex;justify-content:space-between;gap:8px;font-size:.74rem;color:var(--ink-3);margin-top:10px;flex-wrap:wrap}
+
+/* ── Audit + jobs ─────────────────────────────────────────────── */
+.audit{max-height:260px;overflow-y:auto;display:grid;gap:2px}
+.audit-row{display:grid;grid-template-columns:70px minmax(0,190px) minmax(0,1fr);gap:10px;padding:6px 8px;border-radius:8px;font-size:.82rem}
+.audit-row:nth-child(odd){background:var(--surface-2)}
+.audit-ts{color:var(--ink-3);font-size:.78rem}
+.audit-action{color:var(--green-ink);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.audit-detail{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.job{border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;display:grid;gap:2px}
+.job + .job{margin-top:8px}
+.job-top{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:.9rem}
+.job-meta{font-size:.78rem;color:var(--ink-3)}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width:1180px){
+  main{grid-template-columns:minmax(0,1fr);grid-template-areas:"guard" "rca" "findings" "events" "fleet" "gpu" "audit" "jobs";padding:18px 16px 32px}
+  .topbar-inner{padding:14px 16px}
 }
-.event-row{
-  display:flex;gap:10px;padding:4px 0;border-bottom:1px solid var(--border);
-  animation:fadein .2s ease;
+@media (max-width:620px){
+  .guard-state{flex-wrap:wrap}.guard-meta{margin-left:0;text-align:left}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .meters{grid-template-columns:1fr}
+  .ev{grid-template-columns:62px 66px minmax(0,1fr)}
+  .audit-row{grid-template-columns:62px minmax(0,1fr)}.audit-detail{grid-column:1/-1}
 }
-@keyframes fadein{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-.ev-ts{color:var(--muted);white-space:nowrap;min-width:84px}
-.ev-type{min-width:80px}
-.ev-type.telemetry{color:var(--accent)}
-.ev-type.gpu_snapshot{color:var(--cyan)}
-.ev-type.diagnostic{color:var(--amber)}
-.ev-type.sim_job{color:var(--purple)}
-.ev-type.audit{color:var(--green)}
-.ev-type.ros2_event{color:#f472b6}
-.ev-type.error{color:var(--red)}
-.ev-type.guard-halt{color:var(--red);font-weight:500}
-.ev-type.guard-clamp{color:var(--amber)}
-.ev-type.guard-warning{color:var(--amber)}
-.ev-msg{color:var(--text);opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* ── Diagnostic findings ─────────────────────────────────────────── */
-.finding-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
-.finding{
-  background:var(--bg3);border-left:3px solid var(--muted);
-  border-radius:0 4px 4px 0;padding:8px 10px;font-size:12px;
-}
-.finding.ERROR,.finding.critical{border-left-color:var(--red)}
-.finding.warning{border-left-color:var(--amber)}
-.finding-why{font-size:11px;color:var(--muted);margin:2px 0 3px}
-.finding.WARNING{border-left-color:var(--amber)}
-.finding.INFO{border-left-color:var(--accent)}
-.finding-title{font-weight:500;margin-bottom:2px}
-.finding-meta{font-family:var(--mono);font-size:10px;color:var(--muted)}
-
-/* ── Sim job queue ───────────────────────────────────────────────── */
-.job-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
-.job{
-  background:var(--bg3);border:1px solid var(--border);
-  border-radius:5px;padding:9px 12px;font-size:12px;
-}
-.job-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.job-name{font-weight:500;font-size:13px}
-.job-status{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:10px;font-weight:400}
-.status-PLANNING{background:rgba(107,112,128,.2);color:var(--muted)}
-.status-QUEUED{background:rgba(251,191,36,.15);color:var(--amber)}
-.status-RUNNING{background:rgba(52,211,153,.15);color:var(--green)}
-.status-BLOCKED{background:rgba(248,113,113,.15);color:var(--red)}
-.status-DONE{background:rgba(79,156,249,.15);color:var(--accent)}
-.job-meta{font-family:var(--mono);font-size:10px;color:var(--muted)}
-
-/* ── Audit log ───────────────────────────────────────────────────── */
-.audit-stream{
-  height:200px;overflow-y:auto;font-size:11px;font-family:var(--mono);
-  display:flex;flex-direction:column-reverse;gap:2px;
-  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
-}
-.audit-row{display:flex;gap:10px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.03)}
-.audit-ts{color:var(--muted);white-space:nowrap;min-width:84px}
-.audit-action{color:var(--green);min-width:160px}
-.audit-detail{color:var(--text);opacity:.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-/* ── No-data placeholder ─────────────────────────────────────────── */
-.empty{padding:24px;text-align:center;color:var(--muted);font-size:12px;font-family:var(--mono)}
-
-/* ── Responsive ──────────────────────────────────────────────────── */
-@media(max-width:1200px){.row-4{grid-template-columns:repeat(2,1fr)}.row-2-1,.row-1-2{grid-template-columns:1fr}.row-3{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:700px){.row-4,.row-3{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="shell">
 
-<!-- ── Header ──────────────────────────────────────────────────────── -->
-<header>
-  <div class="logo">
-    <div class="logo-dot" id="logo-dot"></div>
-    RoboFleet Nexus
-  </div>
-  <div class="header-right">
-    <span class="stat-chip" id="hdr-clients">0 clients</span>
-    <span class="stat-chip" id="hdr-events">0 events</span>
-    <div class="conn-badge disconnected" id="conn-badge">
-      <div class="conn-dot"></div>
-      <span id="conn-label">connecting…</span>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V7l8-4z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+      </span>
+      RoboFleet Nexus <span class="brand-sub">Policy safety console</span>
+    </div>
+    <div class="topbar-right">
+      <span class="hdr-chip" id="hdr-events">0 events</span>
+      <span class="conn" id="conn" role="status"><span class="conn-dot"></span><span id="conn-label">Connecting…</span></span>
     </div>
   </div>
 </header>
 
-<!-- ── Main ────────────────────────────────────────────────────────── -->
 <main>
 
-  <!-- KPI row -->
-  <div class="row row-4">
-    <div class="kpi blue"><div class="kpi-label">Active robots</div><div class="kpi-value" id="kpi-robots">—</div><div class="kpi-sub">fleet size</div></div>
-    <div class="kpi green"><div class="kpi-label">GPU devices</div><div class="kpi-value" id="kpi-gpus">—</div><div class="kpi-sub">detected</div></div>
-    <div class="kpi amber"><div class="kpi-label">Sim jobs</div><div class="kpi-value" id="kpi-jobs">—</div><div class="kpi-sub">queued / running</div></div>
-    <div class="kpi purple"><div class="kpi-label">Diagnostics</div><div class="kpi-value" id="kpi-diag">—</div><div class="kpi-sub">active findings</div></div>
-  </div>
-
-  <!-- GPU + Robot row -->
-  <div class="row row-2-1">
-
-    <!-- GPU panel -->
-    <div class="panel">
-      <div class="panel-head">
-        <span class="panel-title">GPU inventory</span>
-        <span class="panel-count" id="gpu-count">0 devices</span>
-      </div>
-      <div class="panel-body">
-        <div class="gpu-grid" id="gpu-grid">
-          <div class="empty">Waiting for first GPU snapshot…</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Robot fleet panel -->
-    <div class="panel">
-      <div class="panel-head">
-        <span class="panel-title">Robot fleet</span>
-        <span class="panel-count" id="robot-count">0 robots</span>
-      </div>
-      <div class="panel-body" style="padding:0 0 4px">
-        <div id="robot-fleet">
-          <div class="empty">No robots connected</div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Event stream + Diagnostics + Jobs -->
-  <div class="row row-3">
-
-    <div class="panel">
-      <div class="panel-head">
-        <span class="panel-title">Live event stream</span>
-        <span class="panel-count" id="event-count">0</span>
-      </div>
-      <div class="panel-body" style="padding:8px 12px">
-        <div class="event-stream" id="event-stream">
-          <div class="empty">Waiting for events…</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head">
-        <span class="panel-title">Diagnostic findings</span>
-        <span class="panel-count" id="diag-count">0</span>
-      </div>
-      <div class="panel-body">
-        <div class="finding-list" id="finding-list">
-          <div class="empty">No active findings</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head">
-        <span class="panel-title">Simulation job queue</span>
-        <span class="panel-count" id="job-count">0</span>
-      </div>
-      <div class="panel-body">
-        <div class="job-list" id="job-list">
-          <div class="empty">No simulation jobs</div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Audit log -->
-  <div class="panel">
+  <!-- Guard -->
+  <section class="panel guard a-guard" aria-labelledby="guard-title">
     <div class="panel-head">
-      <span class="panel-title">Audit log</span>
-      <span class="panel-count" id="audit-count">0</span>
+      <span class="panel-title" id="guard-title">Safety guard</span>
+      <span class="panel-note" id="guard-robot">Waiting for a guarded robot</span>
     </div>
-    <div class="panel-body" style="padding:8px 12px">
-      <div class="audit-stream" id="audit-stream">
-        <div class="empty">No audit entries yet</div>
+    <div class="guard-state idle" id="guard-state" aria-live="polite">
+      <div class="guard-icon" id="guard-icon" aria-hidden="true"></div>
+      <div>
+        <div class="guard-word" id="guard-word">No guard events yet</div>
+        <div class="guard-detail" id="guard-detail">Start the guard node and a policy to see verdicts here.</div>
+      </div>
+      <div class="guard-meta" id="guard-meta"></div>
+    </div>
+    <div class="guard-tally">
+      <div class="tally"><div class="tally-num" id="t-clamp">0</div><div class="tally-label"><span class="sw clamp"></span>Actions corrected</div></div>
+      <div class="tally"><div class="tally-num" id="t-halt">0</div><div class="tally-label"><span class="sw halt"></span>Policy halted</div></div>
+      <div class="tally"><div class="tally-num" id="t-reset">0</div><div class="tally-label"><span class="sw reset"></span>Operator resets</div></div>
+    </div>
+    <div class="timeline">
+      <div class="timeline-head"><span>Interventions, last 2 minutes</span><span>Counts above use the same window</span></div>
+      <div class="track" id="track" role="img" aria-label="Timeline of guard interventions over the last two minutes"><div class="track-tip" id="track-tip"></div></div>
+      <div class="timeline-axis"><span>2 min ago</span><span>90 s</span><span>60 s</span><span>30 s</span><span>now</span></div>
+    </div>
+  </section>
+
+  <!-- RCA -->
+  <section class="panel rca a-rca" aria-labelledby="rca-title">
+    <div class="panel-head">
+      <span class="panel-title" id="rca-title">Root-cause analysis</span>
+      <span class="rca-badge" id="rca-risk" hidden></span>
+    </div>
+    <div class="panel-body" id="rca-body">
+      <div class="empty">Claude analyses each new type of finding. The first analysis appears a few seconds after a halt.</div>
+    </div>
+  </section>
+
+  <!-- Events -->
+  <section class="panel a-events" aria-labelledby="ev-title">
+    <div class="panel-head">
+      <span class="panel-title" id="ev-title">Event stream</span>
+      <div class="stream-filter" role="group" aria-label="Filter events">
+        <button type="button" data-filter="guard" aria-pressed="true">Guard</button>
+        <button type="button" data-filter="all" aria-pressed="false">Everything</button>
       </div>
     </div>
-  </div>
+    <div class="panel-body">
+      <div class="stream" id="event-stream"><div class="empty">Waiting for events…</div></div>
+    </div>
+  </section>
+
+  <!-- Findings -->
+  <section class="panel a-findings" aria-labelledby="f-title">
+    <div class="panel-head">
+      <span class="panel-title" id="f-title">Findings</span>
+      <span class="count" id="diag-count">0</span>
+    </div>
+    <div class="panel-body">
+      <div class="finding-list" id="finding-list"><div class="empty">No active findings</div></div>
+    </div>
+  </section>
+
+  <!-- Fleet -->
+  <section class="panel a-fleet" aria-labelledby="fl-title">
+    <div class="panel-head">
+      <span class="panel-title" id="fl-title">Fleet</span>
+      <span class="count" id="robot-count">0 robots</span>
+    </div>
+    <div class="panel-body">
+      <div class="kpis">
+        <div class="kpi blue"><div class="kpi-num" id="kpi-robots">0</div><div class="kpi-label">Robots</div></div>
+        <div class="kpi purple"><div class="kpi-num" id="kpi-gpus">0</div><div class="kpi-label">GPUs</div></div>
+        <div class="kpi amber"><div class="kpi-num" id="kpi-jobs">0</div><div class="kpi-label">Sim jobs</div></div>
+        <div class="kpi red"><div class="kpi-num" id="kpi-diag">0</div><div class="kpi-label">Findings</div></div>
+      </div>
+      <div class="robots" id="robot-fleet"><div class="empty">No robots connected</div></div>
+    </div>
+  </section>
+
+  <!-- GPU -->
+  <section class="panel a-gpu" aria-labelledby="g-title">
+    <div class="panel-head">
+      <span class="panel-title" id="g-title">GPUs</span>
+      <span class="count" id="gpu-count">0</span>
+    </div>
+    <div class="panel-body" id="gpu-grid"><div class="empty">Waiting for the first GPU reading…</div></div>
+  </section>
+
+  <!-- Audit -->
+  <section class="panel a-audit" aria-labelledby="au-title">
+    <div class="panel-head">
+      <span class="panel-title" id="au-title">Audit log</span>
+      <span class="panel-note">Every entry is hash-chained</span>
+      <span class="count" id="audit-count">0</span>
+    </div>
+    <div class="panel-body">
+      <div class="audit" id="audit-stream"><div class="empty">No audit entries yet</div></div>
+    </div>
+  </section>
+
+  <!-- Jobs -->
+  <section class="panel a-jobs" aria-labelledby="j-title">
+    <div class="panel-head">
+      <span class="panel-title" id="j-title">Simulation jobs</span>
+      <span class="count" id="job-count">0</span>
+    </div>
+    <div class="panel-body" id="job-list">
+      <div class="empty">No simulation jobs. Plan one with <code>robofleet simulations plan</code>.</div>
+    </div>
+  </section>
 
 </main>
-</div>
 
 <script>
-// ── State ─────────────────────────────────────────────────────────────────
+// ── State ────────────────────────────────────────────────────────────────
+const WINDOW_MS = 120000;
 const state = {
-  robots: {},      // robot_id → latest telemetry
-  gpus: [],        // latest GPU snapshot
-  findings: {},    // robot_id → [findings]
-  jobs: {},        // job_id  → job
-  rca: {},         // robot_id → latest RCA
-  eventCount: 0,
-  auditCount: 0,
+  robots: {}, gpus: [], findings: {}, jobs: {}, rca: {},
+  eventCount: 0, auditCount: 0,
+  guard: { robot: null, mode: 'idle', reason: '', since: null, marks: [] },
+  filter: 'guard',
 };
 
-// ── WebSocket ─────────────────────────────────────────────────────────────
-const WS_URL = `ws://${location.host}/ws`;
-let ws = null;
-let reconnectTimer = null;
+const ICONS = {
+  ok:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V7l8-4z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
+  halt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+  clamp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M8 8l-4 4 4 4"/><path d="M16 8l4 4-4 4"/></svg>',
+  idle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="8"/></svg>',
+};
+
+// ── WebSocket ────────────────────────────────────────────────────────────
+const WS_URL = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
+let ws = null, reconnectTimer = null;
 
 function connect() {
   ws = new WebSocket(WS_URL);
-
-  ws.onopen = () => {
-    clearTimeout(reconnectTimer);
-    setBadge(true);
-    addEvent('system', 'WebSocket connected');
-  };
-
-  ws.onmessage = (e) => {
-    let msg;
-    try { msg = JSON.parse(e.data); } catch { return; }
-    dispatch(msg);
-  };
-
-  ws.onclose = () => {
-    setBadge(false);
-    addEvent('error', 'Disconnected — reconnecting in 3 s');
-    reconnectTimer = setTimeout(connect, 3000);
-  };
-
-  ws.onerror = () => {
-    ws.close();
-  };
+  ws.onopen = () => { clearTimeout(reconnectTimer); setConn(true); };
+  ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch { return; } dispatch(m); };
+  ws.onclose = () => { setConn(false); addEvent('err', 'Disconnected from the API. Reconnecting in 3 s.', now(), 'all'); reconnectTimer = setTimeout(connect, 3000); };
+  ws.onerror = () => ws.close();
 }
 
-// ── Dispatch ──────────────────────────────────────────────────────────────
+// ── Dispatch ─────────────────────────────────────────────────────────────
 function dispatch(msg) {
   state.eventCount++;
-  document.getElementById('hdr-events').textContent = `${state.eventCount} events`;
-
+  document.getElementById('hdr-events').textContent = `${state.eventCount.toLocaleString()} events`;
   switch (msg.type) {
-    case 'gpu_snapshot':    handleGpuSnapshot(msg); break;
-    case 'telemetry':       handleTelemetry(msg);   break;
-    case 'diagnostic':      handleDiagnostic(msg);  break;
-    case 'sim_job':         handleSimJob(msg);       break;
-    case 'audit':           handleAudit(msg);        break;
-    case 'ros2_event':      handleRos2(msg);         break;
-    case 'rca_result':      handleRca(msg);          break;
+    case 'gpu_snapshot': handleGpuSnapshot(msg); return;            // too frequent for the stream
+    case 'telemetry':    handleTelemetry(msg); break;
+    case 'diagnostic':   handleDiagnostic(msg); return;             // own panel
+    case 'sim_job':      handleSimJob(msg); break;
+    case 'audit':        handleAudit(msg); return;                  // own panel
+    case 'ros2_event':   handleRos2(msg); break;
+    case 'rca_result':   handleRca(msg); break;
   }
-
-  // Findings have their own panel; listing every refresh in the stream is noise.
-  if (msg.type === 'diagnostic') return;
-  const ts = (msg.ts || new Date().toISOString()).slice(11, 19);
-  addEvent(eventLabel(msg), eventSummary(msg), ts);
+  const [tag, text, scope] = describe(msg);
+  addEvent(tag, text, (msg.ts || new Date().toISOString()), scope);
 }
 
-function eventLabel(msg) {
-  if (msg.type === 'telemetry' && msg.data?.event_type === 'guard_intervention') {
-    return `guard-${msg.data.metadata?.verdict === 'pass' ? 'warning' : msg.data.metadata?.verdict || 'clamp'}`;
+function describe(msg) {
+  const d = msg.data || {};
+  if (msg.type === 'telemetry' && d.event_type === 'guard_intervention') {
+    const v = d.metadata?.verdict === 'halt' ? 'halt' : d.metadata?.verdict === 'pass' ? 'warn' : 'clamp';
+    return [v, `${msg.robot_id}: ${(d.message || '').replace(/^Guard (HALT|CLAMP|PASS) at /, 'at ')}`, 'guard'];
   }
-  return msg.type;
+  if (msg.type === 'telemetry' && d.event_type === 'guard_reset') return ['reset', `${msg.robot_id}: ${d.message}`, 'guard'];
+  if (msg.type === 'rca_result') return ['rca', `${msg.rca?.robot_id ?? ''}: analysis ready (${msg.rca?.risk_level ?? '?'} risk)`, 'guard'];
+  if (msg.type === 'telemetry') return ['telemetry', `${msg.robot_id}: ${d.message ?? ''}`, 'all'];
+  if (msg.type === 'sim_job') return ['job', `${msg.job?.name || msg.job?.job_id || 'job'} is ${(msg.job?.status || '').toLowerCase()}`, 'all'];
+  if (msg.type === 'ros2_event') return ['ros2', `${msg.robot_id} ${msg.topic}`, 'all'];
+  return [msg.type, msg.type, 'all'];
 }
 
-function eventSummary(msg) {
-  switch (msg.type) {
-    case 'gpu_snapshot': return `${msg.gpus?.length ?? 0} GPU(s) reported`;
-    case 'telemetry':    return `${msg.robot_id}: ${msg.data?.message ?? JSON.stringify(msg.data).slice(0, 60)}`;
-    case 'diagnostic':   return `${msg.robot_id}: ${msg.findings?.length ?? 0} finding(s)`;
-    case 'sim_job':      return `job ${msg.job?.job_id ?? ''} → ${msg.job?.status ?? ''}`;
-    case 'audit':        return `${msg.entry?.action ?? ''} ${msg.entry?.detail ?? ''}`;
-    case 'ros2_event':   return `${msg.robot_id} ${msg.topic}`;
-    default:             return msg.type;
+// ── Guard ────────────────────────────────────────────────────────────────
+function guardEvent(robotId, data, ts) {
+  const g = state.guard;
+  const t = Date.parse(ts) || Date.now();
+  const v = data.event_type === 'guard_reset' ? 'reset' : (data.metadata?.verdict || 'clamp');
+  g.robot = robotId;
+  const reason = data.metadata?.violations?.[0]?.detail || data.message || '';
+  g.marks.push({ t, v, text: v === 'reset' ? `Reset by ${data.metadata?.operator ?? 'operator'}` : reason });
+  if (v === 'halt') {
+    if (g.mode !== 'holding') { g.since = t; flash(); }
+    g.mode = 'holding'; g.reason = reason;
+  } else if (v === 'reset') {
+    g.mode = 'active'; g.reason = `Resumed after a reset by ${data.metadata?.operator ?? 'an operator'}`; g.since = t;
+  } else if (v === 'clamp' && g.mode !== 'holding') {
+    g.mode = 'correcting'; g.reason = reason; g.since = t;
+  }
+  renderGuard();
+}
+
+function flash() {
+  const el = document.getElementById('guard-state');
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+
+function renderGuard() {
+  const g = state.guard, nowMs = Date.now();
+  // A correction is momentary: after 4 s without another one the guard is simply active.
+  if (g.mode === 'correcting' && nowMs - g.since > 4000) { g.mode = 'active'; g.reason = 'Passing actions inside the safety envelope'; }
+  g.marks = g.marks.filter(m => nowMs - m.t <= WINDOW_MS);
+
+  const words = { idle: 'No guard events yet', active: 'Guard active', correcting: 'Correcting actions', holding: 'Holding position' };
+  const icon = { idle: 'idle', active: 'ok', correcting: 'clamp', holding: 'halt' }[g.mode];
+  const box = document.getElementById('guard-state');
+  box.classList.remove('idle', 'holding', 'correcting');
+  if (g.mode !== 'active') box.classList.add(g.mode);
+  document.getElementById('guard-icon').innerHTML = ICONS[icon];
+  document.getElementById('guard-word').textContent = words[g.mode];
+  document.getElementById('guard-detail').textContent = g.mode === 'idle'
+    ? 'Start the guard node and a policy to see verdicts here.'
+    : g.mode === 'holding' ? `${g.reason}. Waiting for an operator reset.` : g.reason;
+  document.getElementById('guard-robot').textContent = g.robot ? `Robot ${g.robot}` : 'Waiting for a guarded robot';
+  document.getElementById('guard-meta').innerHTML = g.since && g.mode !== 'idle'
+    ? `<b>${fmtAgo(nowMs - g.since)}</b>${g.mode === 'holding' ? 'held for' : 'since last change'}` : '';
+
+  const n = v => g.marks.filter(m => m.v === v).length;
+  document.getElementById('t-clamp').textContent = n('clamp');
+  document.getElementById('t-halt').textContent = n('halt');
+  document.getElementById('t-reset').textContent = n('reset');
+
+  const track = document.getElementById('track');
+  track.querySelectorAll('.mark').forEach(e => e.remove());
+  for (const m of g.marks) {
+    const el = document.createElement('div');
+    el.className = `mark ${m.v === 'pass' ? 'clamp' : m.v}`;
+    el.style.left = `${100 - ((nowMs - m.t) / WINDOW_MS) * 100}%`;
+    el.dataset.tip = `${new Date(m.t).toLocaleTimeString()} · ${m.v} · ${m.text}`;
+    el.tabIndex = 0;
+    track.appendChild(el);
   }
 }
 
-// ── GPU ───────────────────────────────────────────────────────────────────
+(function wireTrackTip() {
+  const track = document.getElementById('track'), tip = document.getElementById('track-tip');
+  const show = (el) => { tip.textContent = el.dataset.tip; tip.style.left = el.style.left; tip.style.display = 'block'; };
+  track.addEventListener('mouseover', e => { if (e.target.classList.contains('mark')) show(e.target); });
+  track.addEventListener('focusin', e => { if (e.target.classList.contains('mark')) show(e.target); });
+  track.addEventListener('mouseout', () => tip.style.display = 'none');
+  track.addEventListener('focusout', () => tip.style.display = 'none');
+})();
+
+setInterval(renderGuard, 1000);
+
+// ── Telemetry / fleet ────────────────────────────────────────────────────
+function handleTelemetry(msg) {
+  const data = msg.data || {}, metrics = data.metrics || {}, metadata = data.metadata || {};
+  if (data.event_type === 'guard_intervention' || data.event_type === 'guard_reset') {
+    guardEvent(msg.robot_id, data, data.timestamp || msg.ts);
+  }
+  const prev = state.robots[msg.robot_id] || {};
+  state.robots[msg.robot_id] = {
+    ...prev, id: msg.robot_id, ts: msg.ts,
+    status: data.severity === 'critical' ? 'error' : data.severity === 'warning' ? 'warn' : 'ok',
+    message: data.message || prev.message,
+    battery_pct: metrics.battery_pct != null ? metrics.battery_pct : prev.battery_pct,
+  };
+  renderRobots();
+}
+
+function renderRobots() {
+  const robots = Object.values(state.robots);
+  document.getElementById('kpi-robots').textContent = robots.length;
+  document.getElementById('robot-count').textContent = `${robots.length} robot${robots.length !== 1 ? 's' : ''}`;
+  const el = document.getElementById('robot-fleet');
+  if (!robots.length) { el.innerHTML = '<div class="empty">No robots connected</div>'; return; }
+  const label = { ok: 'OK', warn: 'Warning', error: 'Halted' };
+  el.innerHTML = robots.map(r => `
+    <div class="robot">
+      <span class="robot-dot ${r.status}"></span>
+      <div style="min-width:0"><div class="robot-name">${escHtml(r.id)}</div>
+        <div class="robot-msg">${escHtml(r.message || '')}${r.battery_pct != null && !/battery/i.test(r.message || '') ? ` · battery ${r.battery_pct}%` : ''}</div></div>
+      <span class="robot-state ${r.status}">${label[r.status] || r.status}</span>
+    </div>`).join('');
+}
+
+function handleRos2(msg) {
+  if (msg.topic === '/battery_state' && msg.data?.percentage != null) {
+    const r = state.robots[msg.robot_id] || { id: msg.robot_id, status: 'ok' };
+    r.battery_pct = Math.round(msg.data.percentage * 100); r.ts = msg.ts;
+    state.robots[msg.robot_id] = r; renderRobots();
+  }
+}
+
+// ── GPU ──────────────────────────────────────────────────────────────────
 function handleGpuSnapshot(msg) {
   state.gpus = msg.gpus || [];
   document.getElementById('kpi-gpus').textContent = state.gpus.length;
-  document.getElementById('gpu-count').textContent = `${state.gpus.length} device${state.gpus.length !== 1 ? 's' : ''}`;
-
+  document.getElementById('gpu-count').textContent = state.gpus.length;
   const grid = document.getElementById('gpu-grid');
-  if (!state.gpus.length) {
-    grid.innerHTML = '<div class="empty">No NVIDIA GPUs detected</div>';
-    return;
-  }
+  if (!state.gpus.length) { grid.innerHTML = '<div class="empty">No NVIDIA GPUs detected on this host</div>'; return; }
   grid.innerHTML = state.gpus.map(g => {
-    const utilClass = g.utilization_pct > 90 ? 'crit' : g.utilization_pct > 70 ? 'warn' : '';
-    const cardClass = g.utilization_pct > 90 ? 'critical-load' : g.utilization_pct > 65 ? 'high-load' : '';
-    const vramPct   = Math.round(g.vram_pct);
-    const tempPct   = Math.min(100, Math.round(g.temperature_c / 1.0));
-    return `
-    <div class="gpu-card ${cardClass}">
-      <div class="gpu-name">
-        <span>${g.name}</span>
-        <div style="display:flex;gap:6px;align-items:center">
-          ${g.wsl ? '<span class="gpu-wsl-tag">WSL</span>' : ''}
-          <span class="profile-badge profile-${g.profile}">${g.profile}</span>
-        </div>
+    const vram = Math.round(g.vram_pct), util = Math.round(g.utilization_pct), temp = Math.min(100, g.temperature_c / 90 * 100);
+    return `<div class="gpu">
+      <div class="gpu-top"><span class="gpu-name">${escHtml(g.name)}</span>
+        ${g.wsl ? '<span class="tag">WSL</span>' : ''}<span class="tag purple">${escHtml(g.profile)}</span></div>
+      <div class="meters">
+        <div><div class="meter-label">Memory</div><div class="meter-val">${g.vram_used_mb.toLocaleString()} <span class="meter-label">/ ${g.vram_total_mb.toLocaleString()} MiB</span></div>
+          <div class="meter-track"><div class="meter-fill purple" style="width:${vram}%"></div></div></div>
+        <div><div class="meter-label">Utilization</div><div class="meter-val">${util}%</div>
+          <div class="meter-track"><div class="meter-fill ${util > 90 ? 'hot' : ''}" style="width:${util}%"></div></div></div>
+        <div><div class="meter-label">Temperature</div><div class="meter-val">${g.temperature_c} °C</div>
+          <div class="meter-track"><div class="meter-fill ${g.temperature_c > 80 ? 'hot' : ''}" style="width:${temp}%"></div></div></div>
       </div>
-      <div class="gpu-metrics">
-        <div>
-          <div class="gm-label">VRAM</div>
-          <div class="gm-value">${g.vram_used_mb} <span style="font-size:10px;color:var(--muted)">/ ${g.vram_total_mb} MiB</span></div>
-          <div class="bar-track"><div class="bar-fill vram" style="width:${vramPct}%"></div></div>
-        </div>
-        <div>
-          <div class="gm-label">GPU util</div>
-          <div class="gm-value">${g.utilization_pct}<span style="font-size:10px;color:var(--muted)"> %</span></div>
-          <div class="bar-track"><div class="bar-fill util ${utilClass}" style="width:${g.utilization_pct}%"></div></div>
-        </div>
-        <div>
-          <div class="gm-label">Temp</div>
-          <div class="gm-value">${g.temperature_c}<span style="font-size:10px;color:var(--muted)"> °C</span></div>
-          <div class="bar-track"><div class="bar-fill temp ${g.temperature_c > 80 ? 'crit' : ''}" style="width:${Math.min(100,g.temperature_c / 90 * 100)}%"></div></div>
-        </div>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-family:var(--mono)">
-        <span>Pwr ${g.power_draw_w.toFixed(0)} / ${g.power_limit_w.toFixed(0)} W</span>
-        <span>Driver ${g.driver_version}</span>
-        <span>CUDA ${g.cuda_version}</span>
-      </div>
+      <div class="gpu-foot"><span>Power ${g.power_draw_w.toFixed(0)} / ${g.power_limit_w.toFixed(0)} W</span><span>Driver ${escHtml(g.driver_version)}</span></div>
     </div>`;
   }).join('');
 }
 
-// ── Telemetry ─────────────────────────────────────────────────────────────
-function handleTelemetry(msg) {
-  const data = msg.data || {};
-  const metrics = data.metrics || {};
-  const metadata = data.metadata || {};
-  const prev = state.robots[msg.robot_id] || {};
-  state.robots[msg.robot_id] = {
-    ...prev,
-    id: msg.robot_id,
-    ts: msg.ts,
-    status: data.severity === 'critical' ? 'error' : data.severity === 'warning' ? 'warn' : 'ok',
-    subsystem: data.subsystem || prev.subsystem,
-    message: data.message || prev.message,
-    location: metadata.location || prev.location,
-    battery_pct: metrics.battery_pct != null ? metrics.battery_pct : prev.battery_pct,
-    ...Object.fromEntries(Object.entries(metrics).filter(([k]) => k !== 'battery_pct')),
-  };
-  renderRobotTable();
-  document.getElementById('kpi-robots').textContent = Object.keys(state.robots).length;
-}
-
-function renderRobotTable() {
-  const robots = Object.values(state.robots);
-  const el = document.getElementById('robot-fleet');
-  document.getElementById('robot-count').textContent = `${robots.length} robot${robots.length !== 1 ? 's' : ''}`;
-  if (!robots.length) {
-    el.innerHTML = '<div class="empty">No robots connected</div>';
-    return;
-  }
-  const rows = robots.map(r => {
-    const status = r.status || 'unknown';
-    const dotClass = status === 'ok' ? 's-ok' : status === 'warn' ? 's-warn' : status === 'error' ? 's-error' : 's-offline';
-    const batt = r.battery_pct != null ? r.battery_pct : null;
-    const battColor = batt == null ? 'var(--muted)' : batt > 60 ? 'var(--green)' : batt > 25 ? 'var(--amber)' : 'var(--red)';
-    const battEl = batt != null
-      ? `<span class="batt-bar"><span class="batt-fill" style="width:${batt}%;background:${battColor}"></span></span> ${batt}%`
-      : '<span style="color:var(--muted)">—</span>';
-    const ts = r.ts ? r.ts.slice(11,19) : '—';
-    return `<tr>
-      <td><span class="status-dot ${dotClass}"></span>${r.id}</td>
-      <td>${status}</td>
-      <td>${battEl}</td>
-      <td>${r.location || '—'}</td>
-      <td style="color:var(--muted)">${ts}</td>
-    </tr>`;
-  }).join('');
-  el.innerHTML = `
-  <table class="robot-table">
-    <thead><tr><th>Robot ID</th><th>Status</th><th>Battery</th><th>Location</th><th>Last seen</th></tr></thead>
-    <tbody>${rows}</tbody>
-  </table>`;
-}
-
-// ── Diagnostics ───────────────────────────────────────────────────────────
+// ── Findings & RCA ───────────────────────────────────────────────────────
 function handleDiagnostic(msg) {
-  if (msg.findings?.length) {
-    state.findings[msg.robot_id] = msg.findings;
-  } else {
-    delete state.findings[msg.robot_id];
-  }
+  if (msg.findings?.length) state.findings[msg.robot_id] = msg.findings; else delete state.findings[msg.robot_id];
   renderFindings();
+}
+
+function renderFindings() {
+  const all = Object.entries(state.findings).flatMap(([rid, fs]) => fs.map(f => ({ ...f, robot_id: rid })));
+  document.getElementById('diag-count').textContent = all.length;
+  document.getElementById('kpi-diag').textContent = all.length;
+  const el = document.getElementById('finding-list');
+  if (!all.length) { el.innerHTML = '<div class="empty">No active findings</div>'; return; }
+  const sevLabel = { critical: '● Critical', warning: '▲ Warning', info: 'ℹ Info' };
+  el.innerHTML = all.map(f => {
+    const sev = (f.severity || 'info').toLowerCase();
+    return `<div class="finding">
+      <div class="finding-top"><span class="sev sev-${sev}">${sevLabel[sev] || sev}</span><span class="finding-title">${escHtml(f.title || '(untitled finding)')}</span></div>
+      ${f.evidence?.length > 1 ? `<div class="finding-why">${escHtml(f.evidence[1])}</div>` : ''}
+      <div class="finding-meta">${escHtml(f.robot_id)} · ${f.ts ? fmtTime(f.ts) : 'now'}</div>
+    </div>`;
+  }).join('');
 }
 
 function handleRca(msg) {
   const rca = msg.rca;
   if (!rca?.robot_id) return;
   state.rca[rca.robot_id] = rca;
-  renderFindings();
+  renderRca();
 }
 
-function renderFindings() {
-  const all = Object.entries(state.findings).flatMap(([rid, fs]) =>
-    fs.map(f => ({ ...f, robot_id: rid }))
-  );
-  const el = document.getElementById('finding-list');
-  const count = document.getElementById('diag-count');
-  count.textContent = all.length;
-  document.getElementById('kpi-diag').textContent = all.length;
-
-  let html = '';
-
-  // RCA results per robot
-  for (const [rid, rca] of Object.entries(state.rca)) {
-    const riskColor = {critical:'var(--red)',high:'var(--amber)',medium:'var(--accent)',low:'var(--green)'}[rca.risk_level] || 'var(--muted)';
-    html += `<div style="background:var(--bg3);border:1px solid var(--border);border-left:3px solid ${riskColor};border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:500;color:var(--text)">🤖 AI RCA — ${rid}</span>
-        <span style="font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.07);color:${riskColor}">${rca.risk_level?.toUpperCase() || 'UNKNOWN'} RISK</span>
-      </div>
-      <div style="font-size:12px;color:var(--text);margin-bottom:8px">${rca.summary || ''}</div>
-      ${(rca.root_causes || []).map(rc => `
-        <div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:2px">
-          <span style="color:var(--amber)">#${rc.rank}</span> ${rc.cause}
-          <span style="opacity:.6"> [${rc.confidence}]</span>
-        </div>`).join('')}
-      ${(rca.recommended_actions || []).filter(a => a.priority === 'immediate').map(a => `
-        <div style="font-size:11px;color:var(--red);margin-top:4px">⚡ ${a.action}</div>`).join('')}
-      <div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-top:6px">
-        ETA: ${rca.estimated_resolution_time || '?'} · ${rca.findings_analyzed || 0} finding(s) · tokens: ${(rca.input_tokens||0)+(rca.output_tokens||0)}
-      </div>
-    </div>`;
-  }
-
-  if (!all.length && !html) {
-    el.innerHTML = '<div class="empty">No active findings</div>';
-    return;
-  }
-
-  html += all.map(f => `
-    <div class="finding ${f.severity || 'INFO'}">
-      <div class="finding-title">${escHtml(f.title || f.message || '(no message)')}</div>
-      ${f.evidence?.length > 1 ? `<div class="finding-why">${escHtml(f.evidence[1])}</div>` : ''}
-      <div class="finding-meta">${f.robot_id} · ${f.severity || 'INFO'} · ${(f.ts || '').slice(11,19) || 'now'}</div>
-    </div>`).join('');
-
-  el.innerHTML = html;
+function renderRca() {
+  const list = Object.values(state.rca).sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+  const rca = list[0];
+  const body = document.getElementById('rca-body'), badge = document.getElementById('rca-risk');
+  if (!rca) return;
+  const risk = (rca.risk_level || 'medium').toLowerCase();
+  badge.hidden = false; badge.className = `rca-badge risk-${risk}`; badge.textContent = `${risk[0].toUpperCase()}${risk.slice(1)} risk`;
+  const causes = (rca.root_causes || []).map(c => `
+    <li><span class="rank">${c.rank ?? ''}</span><span>${escHtml(c.cause)}<span class="conf conf-${(c.confidence || 'low').toLowerCase()}">${escHtml(c.confidence || '')}</span></span></li>`).join('');
+  const actions = (rca.recommended_actions || []).slice(0, 4).map(a => `
+    <div class="action ${a.priority || ''}"><span class="action-pri">${a.priority === 'immediate' ? 'Now' : a.priority === 'soon' ? 'Soon' : 'Monitor'}</span>${escHtml(a.action)}</div>`).join('');
+  const tokens = (rca.input_tokens || 0) + (rca.output_tokens || 0);
+  const source = rca.mock ? 'Placeholder analysis: set ROBOFLEET_RCA_ENABLED=1 for Claude' : `Claude · ${tokens.toLocaleString()} tokens`;
+  body.innerHTML = `
+    <div class="rca-summary">${escHtml(rca.summary || '')}</div>
+    <ul class="rca-causes">${causes}</ul>
+    <div class="rca-actions">${actions}</div>
+    <div class="rca-foot">${escHtml(rca.robot_id)} · ${source} · ${fmtTime(rca.timestamp)}</div>`;
 }
 
-// ── Sim jobs ──────────────────────────────────────────────────────────────
+// ── Jobs ─────────────────────────────────────────────────────────────────
 function handleSimJob(msg) {
-  const job = msg.job;
-  if (!job?.job_id) return;
+  const job = msg.job; if (!job?.job_id) return;
   state.jobs[job.job_id] = job;
-  renderJobs();
-}
-
-function renderJobs() {
   const jobs = Object.values(state.jobs);
-  const el = document.getElementById('job-list');
-  const count = document.getElementById('job-count');
-  count.textContent = jobs.length;
-  document.getElementById('kpi-jobs').textContent = jobs.filter(j => ['QUEUED','RUNNING'].includes(j.status)).length;
-  if (!jobs.length) {
-    el.innerHTML = '<div class="empty">No simulation jobs</div>';
-    return;
-  }
-  el.innerHTML = jobs.slice().reverse().map(j => `
-    <div class="job">
-      <div class="job-header">
-        <span class="job-name">${j.name || j.job_id}</span>
-        <span class="job-status status-${j.status || 'PLANNING'}">${j.status || 'PLANNING'}</span>
-      </div>
-      <div class="job-meta">${j.environment || '—'} · ${j.vram_required_mb ? j.vram_required_mb+' MiB req.' : ''} · ${(j.ts || '').slice(11,19) || ''}</div>
-    </div>`).join('');
+  document.getElementById('job-count').textContent = jobs.length;
+  document.getElementById('kpi-jobs').textContent = jobs.filter(j => ['QUEUED', 'RUNNING'].includes(j.status)).length;
+  document.getElementById('job-list').innerHTML = jobs.slice().reverse().map(j => `
+    <div class="job"><div class="job-top"><span>${escHtml(j.name || j.job_id)}</span><span class="tag">${escHtml(j.status || 'PLANNING')}</span></div>
+      <div class="job-meta">${escHtml(j.environment || '')}${j.vram_required_mb ? ` · needs ${j.vram_required_mb} MiB` : ''}</div></div>`).join('');
 }
 
-// ── Audit ─────────────────────────────────────────────────────────────────
+// ── Audit ────────────────────────────────────────────────────────────────
 function handleAudit(msg) {
   state.auditCount++;
   document.getElementById('audit-count').textContent = state.auditCount;
   const e = msg.entry || {};
-  const ts = (msg.ts || '').slice(11,19) || '—';
   const row = document.createElement('div');
   row.className = 'audit-row';
-  row.innerHTML = `
-    <span class="audit-ts">${ts}</span>
-    <span class="audit-action">${e.action || 'event'}</span>
-    <span class="audit-detail">${e.detail || JSON.stringify(e).slice(0,80)}</span>`;
-  prependToStream('audit-stream', row);
+  row.innerHTML = `<span class="audit-ts">${fmtTime(msg.ts)}</span><span class="audit-action">${escHtml(e.action || 'event')}</span><span class="audit-detail">${escHtml(e.detail || JSON.stringify(e).slice(0, 80))}</span>`;
+  prepend('audit-stream', row, 100);
 }
 
-// ── ROS2 events ───────────────────────────────────────────────────────────
-function handleRos2(msg) {
-  // ROS2 topic messages update the relevant robot's state
-  if (msg.topic === '/battery_state' && msg.data?.percentage != null) {
-    if (!state.robots[msg.robot_id]) state.robots[msg.robot_id] = { id: msg.robot_id };
-    state.robots[msg.robot_id].battery_pct = Math.round(msg.data.percentage * 100);
-    state.robots[msg.robot_id].status = 'ok';
-    state.robots[msg.robot_id].ts = msg.ts;
-    renderRobotTable();
-    document.getElementById('kpi-robots').textContent = Object.keys(state.robots).length;
-  }
-}
-
-// ── Event stream ──────────────────────────────────────────────────────────
-const MAX_EVENTS = 200;
-
-function addEvent(type, msg, ts) {
-  const stream = document.getElementById('event-stream');
-  // Remove placeholder
-  const empty = stream.querySelector('.empty');
-  if (empty) empty.remove();
-
+// ── Event stream ─────────────────────────────────────────────────────────
+const TAG_TEXT = { halt: 'HALT', clamp: 'CLAMP', warn: 'WARN', reset: 'RESET', rca: 'RCA', err: 'ERROR', telemetry: 'DATA', job: 'JOB', ros2: 'ROS2' };
+function addEvent(tag, text, ts, scope) {
   const row = document.createElement('div');
-  row.className = 'event-row';
-  row.innerHTML = `
-    <span class="ev-ts">${ts || new Date().toISOString().slice(11,19)}</span>
-    <span class="ev-type ${type}">${type.startsWith('guard-') ? type.slice(6).toUpperCase() : type}</span>
-    <span class="ev-msg">${escHtml(msg)}</span>`;
-
-  stream.prepend(row);
-
-  // Trim to MAX_EVENTS
-  while (stream.children.length > MAX_EVENTS) {
-    stream.removeChild(stream.lastChild);
-  }
-
-  document.getElementById('event-count').textContent = Math.min(state.eventCount, MAX_EVENTS);
+  row.className = 'ev'; row.dataset.scope = scope;
+  row.innerHTML = `<span class="ev-ts">${fmtTime(ts)}</span><span class="ev-tag ${tag}">${TAG_TEXT[tag] || tag.toUpperCase()}</span><span class="ev-msg" title="${escHtml(text)}">${escHtml(text)}</span>`;
+  row.hidden = state.filter === 'guard' && scope !== 'guard';
+  prepend('event-stream', row, 200);
 }
 
-function prependToStream(id, el) {
-  const stream = document.getElementById(id);
-  const empty = stream.querySelector('.empty');
-  if (empty) empty.remove();
-  stream.prepend(el);
-  while (stream.children.length > 100) stream.removeChild(stream.lastChild);
-}
+document.querySelectorAll('.stream-filter button').forEach(b => b.addEventListener('click', () => {
+  state.filter = b.dataset.filter;
+  document.querySelectorAll('.stream-filter button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  document.querySelectorAll('#event-stream .ev').forEach(r => r.hidden = state.filter === 'guard' && r.dataset.scope !== 'guard');
+}));
 
-// ── UI helpers ────────────────────────────────────────────────────────────
-function setBadge(connected) {
-  const badge = document.getElementById('conn-badge');
-  const label = document.getElementById('conn-label');
-  const dot   = document.getElementById('logo-dot');
-  if (connected) {
-    badge.className = 'conn-badge connected';
-    label.textContent = 'connected';
-    dot.style.background = 'var(--green)';
-  } else {
-    badge.className = 'conn-badge disconnected';
-    label.textContent = 'disconnected';
-    dot.style.background = 'var(--red)';
-  }
+// ── Helpers ──────────────────────────────────────────────────────────────
+function prepend(id, el, max) {
+  const box = document.getElementById(id);
+  box.querySelector('.empty')?.remove();
+  box.prepend(el);
+  while (box.children.length > max) box.removeChild(box.lastChild);
 }
-
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function setConn(ok) {
+  const c = document.getElementById('conn');
+  c.className = `conn ${ok ? 'ok' : 'down'}`;
+  document.getElementById('conn-label').textContent = ok ? 'Connected' : 'Disconnected';
 }
+function now() { return new Date().toISOString(); }
+function fmtTime(ts) { const d = new Date(ts || Date.now()); return isNaN(d) ? '—' : d.toLocaleTimeString([], { hour12: false }); }
+function fmtAgo(ms) { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${s % 60} s`; }
+function escHtml(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
-// ── Boot ──────────────────────────────────────────────────────────────────
+renderGuard();
 connect();
 </script>
 </body>

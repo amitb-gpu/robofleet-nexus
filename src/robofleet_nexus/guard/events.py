@@ -68,3 +68,23 @@ def decision_to_event(decision: GuardDecision, source: Source = "ros2") -> dict[
             "latched": decision.latched,
         },
     }
+
+
+RESET_EVENT_TYPE = "guard_reset"
+
+
+def reset_to_event(
+    robot_id: str, operator: str, resets: int, source: Source = "ros2"
+) -> dict[str, Any]:
+    """Build a RobotEvent payload recording an operator reset of a halted guard."""
+    return {
+        "event_id": str(uuid.uuid4()),
+        "robot_id": robot_id,
+        "source": source,
+        "severity": "info",
+        "event_type": RESET_EVENT_TYPE,
+        "subsystem": "safety",
+        "message": f"Guard reset by operator '{operator}'; policy resumed",
+        "metrics": {"guard.resets": float(resets)},
+        "metadata": {"verdict": "reset", "operator": operator, "latched": False},
+    }

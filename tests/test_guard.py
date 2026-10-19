@@ -431,3 +431,12 @@ def test_guard_halt_reaches_dashboard_state() -> None:
     diag = manager._latest_by_robot[("diagnostic", "arm_dash")]
     assert diag["findings"][0]["title"] == "Policy halted by safety guard"
     assert ("rca_result", "arm_dash") in manager._latest_by_robot
+
+
+def test_guard_reset_event_is_accepted_without_findings() -> None:
+    from robofleet_nexus.api.main import app
+    from robofleet_nexus.guard.events import reset_to_event
+
+    response = TestClient(app).post("/telemetry", json=reset_to_event("arm_dash", "amit", 3))
+    assert response.status_code == 200
+    assert response.json() == []

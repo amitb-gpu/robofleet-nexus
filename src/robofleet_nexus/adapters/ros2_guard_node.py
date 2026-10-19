@@ -40,7 +40,7 @@ from robofleet_nexus.audit.hash_chain import HashChainAuditLog
 from robofleet_nexus.guard.baseline import ObservationBaseline
 from robofleet_nexus.guard.core import ActionGuard, GuardDecision, Verdict
 from robofleet_nexus.guard.envelope import SafetyEnvelope
-from robofleet_nexus.guard.events import decision_to_event
+from robofleet_nexus.guard.events import decision_to_event, reset_to_event
 
 logger = logging.getLogger("robofleet.guard_node")
 
@@ -87,8 +87,13 @@ class TelemetryForwarder:
             if now - self._last_clamp_post < CLAMP_EVENT_MIN_INTERVAL_S:
                 return  # clamps can fire every control step; send at most one per second
             self._last_clamp_post = now
+        self.submit_event(decision_to_event(decision, source="ros2"))
+
+    def submit_event(self, event: dict[str, Any]) -> None:
+        if not self._enabled:
+            return
         try:
-            self._queue.put_nowait(decision_to_event(decision, source="ros2"))
+            self._queue.put_nowait(event)
         except queue.Full:
             logger.warning("telemetry queue full; dropping guard event")
 
@@ -174,6 +179,7 @@ def run_guard_node(args: argparse.Namespace) -> None:
                 self.get_logger().error(str(exc))
                 return
             self.get_logger().info(f"guard reset by operator '{operator}'")
+            forwarder.submit_event(reset_to_event(guard.robot_id, operator, guard.stats.resets))
             # Confirm on /guard/status. Messages from one publisher arrive in order, so
             # subscribers see every "still latched" status from before the reset first.
             status = String()
